@@ -25,6 +25,12 @@ actually done?*
 
 ---
 
+## One idea: Jev is the judge
+
+Every capability is the same move — put something in front of Jev and act on its verdict.
+The reflexes each hand the judge one artifact at a fixed point in the loop; the tree and
+search are that judge scaled up.
+
 ## The three reflexes
 
 | Reflex | Hook | Jev decides | You get |
@@ -83,7 +89,7 @@ and runs a live/mock probe. Tune anything in `.jeveloper.json` — see
 | `/jeveloper:check` | Jev verifies an output/claim you paste in |
 | `/jeveloper:ask` | any raw typed question — `noul` / `choice` / `score` |
 | `/jeveloper:tree` | compose many sub-decisions into one — branched + recursively reduced |
-| `/jeveloper:search` | search candidate *moves* with Jev as the evaluator — beam + minimax lookahead |
+| `/jeveloper:search` | search candidate *options* with Jev as the judge — beam + lookahead |
 
 ### Decision trees
 
@@ -95,24 +101,24 @@ exploring multiple branches at once is nearly free. See
 [`skills/jeveloper/reference/mode-tree.md`](skills/jeveloper/reference/mode-tree.md) and the
 worked spec in [`examples/decision-tree/`](examples/decision-tree/README.md).
 
-### Move search — Jev as an evaluation function ♟️
+### Option search — Jev as the evaluation function
 
-Sometimes the question isn't *"do these conditions hold?"* but *"which move do I make?"*.
-`/jeveloper:search` (and `scripts/jev_search.py`) treats it like a chess engine: **Claude
-proposes** candidate moves, **Jev scores** each ply (one batched, parallel call), a **beam**
-keeps the strongest, lookahead recurses into the likely replies (a `"them"` ply models the
-worst case), and **minimax** backs the scores up — so the recommended move is the one with
-the best *line*, catching the move that looks fine now but backs up badly. See
+Sometimes the question isn't *"do these conditions hold?"* but *"which option do I pick?"*.
+`/jeveloper:search` (and `scripts/jev_search.py`): **Claude proposes** candidate options,
+**Jev judges** each (one batched, parallel call), a **beam** keeps the strongest, lookahead
+recurses into each option's likely follow-on (a `"minimize"` node models the worst case), and
+the scores **back up** — so the recommended option is the one with the best *outcome*,
+catching the option that looks fine now but backs up badly. See
 [`skills/jeveloper/reference/mode-search.md`](skills/jeveloper/reference/mode-search.md) and
-[`examples/move-search/`](examples/move-search/README.md).
+[`examples/search/`](examples/search/README.md).
 
-|  | Chess | jeveloper |
-|---|---|---|
-| generate | legal moves | actions **Claude proposes** |
-| evaluate | eval function | **Jev** (`score`, one call per ply) |
-| prune | move ordering | **beam** (top-k) |
-| look ahead | opponent's reply | a `"them"` ply (worst-case) |
-| decide | minimax backup | best *line*, not best immediate move |
+It's ordinary lookahead search — the move-ordering + minimax idea, with **Jev as the
+evaluation function** instead of a hand-written one. Nothing about it is game-specific; the
+"options" are whatever actions Claude would actually consider.
+
+|  | generate | evaluate | prune | look ahead | decide |
+|---|---|---|---|---|---|
+| **search** | options **Claude proposes** | **Jev** (`score`, one call per level) | **beam** (top-k) | recurse into `next` (`minimize` = worst-case) | best *outcome*, not best immediate look |
 
 ## How it fits together
 
@@ -142,7 +148,7 @@ jeveloper/
 │   └── scripts/          jev_client · jev_config · route_gate · check_output · warden · jev_ask · jev_tree · jev_search
 ├── commands/             /jeveloper: setup · route · check · ask · tree · search
 ├── agents/               jev-adjudicator (batch typed verification)
-└── examples/             loop-walkthrough · decision-tree · move-search
+└── examples/             loop-walkthrough · decision-tree · search
 ```
 
 Zero dependencies — the scripts use only the Python standard library, so the hooks run with

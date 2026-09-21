@@ -1,0 +1,38 @@
+{
+  "id": "fix_flaky_test",
+  "objective": "Make the flaky integration test reliably pass without hiding a real bug or destabilizing the suite",
+  "mode": "maximize",
+  "criteria": ["makes it worse", "no real improvement", "marginal", "solid", "root-cause fix"],
+  "options": [
+    {
+      "id": "add_retry",
+      "label": "Wrap the test in a retry-3-times decorator",
+      "next": {
+        "id": "retry_outcome",
+        "mode": "minimize",
+        "objective": "Expose the worst realistic consequence of retrying",
+        "options": [
+          { "id": "masks_race", "label": "The retry masks a genuine production race condition" },
+          { "id": "slows_ci", "label": "Retries triple CI time on the real failures" }
+        ]
+      }
+    },
+    {
+      "id": "fix_race",
+      "label": "Find and fix the underlying race with proper synchronization",
+      "next": {
+        "id": "fix_race_outcome",
+        "mode": "minimize",
+        "objective": "Expose the worst realistic consequence of the race fix",
+        "options": [
+          { "id": "wrong_root_cause", "label": "The 'fix' addresses the wrong root cause and it stays flaky" },
+          { "id": "perf_regression", "label": "The added locking introduces a performance regression" }
+        ]
+      }
+    },
+    {
+      "id": "delete_test",
+      "label": "Delete the flaky test entirely"
+    }
+  ]
+}

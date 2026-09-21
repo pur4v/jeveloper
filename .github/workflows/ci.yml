@@ -84,10 +84,10 @@ jobs:
           done
           echo "decision tree OK"
 
-      - name: Move search runs (mock) and validates example specs
+      - name: Option search runs (mock) and validates example specs
         run: |
           set -e
-          for spec in examples/move-search/*.json; do
+          for spec in examples/search/*.json; do
             python3 -c "import json; json.load(open('$spec'))"
             out=$(python3 skills/jeveloper/scripts/jev_search.py "$spec" "example state for CI")
             echo "$out"

@@ -19,6 +19,18 @@ deliberate and expensive. `jeveloper` wires Jev in as Claude's **reflexes**: che
 automatically in the agent loop, so the slow, expensive reasoner spends its effort on the
 work instead of on second-guessing itself.
 
+**The one idea: Jev is a judge.** Every capability here is the same move — hand Jev
+something and ask it to judge it, then act on the verdict. The three reflexes each put one
+artifact in front of the judge at a fixed point in the loop:
+
+- **Route** (`PreToolUse`) — Jev judges the *proposed tool call* → allow / ask / deny.
+- **Check** (`PostToolUse`) — Jev judges the *tool's output* → passed, or feed the concern back.
+- **Warden** (`Stop`) — Jev judges *whether the task is done* → stop, or keep going.
+
+The tree and the search are that same judge scaled up: the **tree** judges many composed
+conditions and reduces them; **search** judges candidate options and looks ahead. Keep "Jev
+is the judge" in mind and the whole plugin is one pattern.
+
 Jev never generates prose. You give it **state** (text/JSON) and **typed questions**; it
 returns **typed probabilistic decisions**. Three question types cover everything here:
 
@@ -61,16 +73,17 @@ request, each tree level is a single cheap call, so exploring multiple branches 
 practically free. Run trees with `/jeveloper:tree` (or `scripts/jev_tree.py`); the trace
 shows exactly which sub-decision swung the result. See `reference/mode-tree.md`.
 
-## Choosing a move — search (the chess analogy)
+## Choosing an option — search with lookahead
 
-When the decision is *"which move do I make?"* rather than *"do these conditions hold?"*,
-search it like a chess engine: **Claude proposes** candidate moves, **Jev is the evaluation
-function** that scores each ply (one batched, parallel call), a **beam** keeps the strongest
-and prunes the rest, lookahead recurses into the likely **replies** (a `"them"` ply models
-the worst-case response), and **minimax** backs the scores up so the recommended move is the
-one with the best *line* — not the best immediate look. That last part is the payoff: it
-catches the move that looks fine now but backs up badly. Run with `/jeveloper:search` (or
-`scripts/jev_search.py`). See `reference/mode-search.md`.
+When the decision is *"which option do I pick?"* rather than *"do these conditions hold?"*,
+search it: **Claude proposes** candidate options, **Jev judges** each (one batched, parallel
+call), a **beam** keeps the strongest and prunes the rest, lookahead recurses into each
+option's likely follow-on (`next`), and the node's `mode` — `maximize` / `minimize`
+(worst-case) / `average` — backs the scores up so the recommended option is the one with the
+best *outcome*, not the best immediate look. That last part is the payoff: it catches the
+option that looks fine now but backs up badly. (If it helps: it's move-ordering + minimax
+with Jev as the evaluation function — but nothing about it is game-specific.) Run with
+`/jeveloper:search` (or `scripts/jev_search.py`). See `reference/mode-search.md`.
 
 ## The disciplines (non-negotiable)
 
@@ -112,7 +125,7 @@ Beyond the automatic reflexes, hand Jev a single decision with:
 - `/jeveloper:check` — Jev verifies a specific output or claim you paste in.
 - `/jeveloper:ask` — pose any raw typed question (noul/choice/score).
 - `/jeveloper:tree` — compose many sub-decisions into one, branched and recursively reduced.
-- `/jeveloper:search` — search candidate *moves* with Jev as the evaluator (beam + minimax lookahead).
+- `/jeveloper:search` — search candidate *options* with Jev as the judge (beam + lookahead).
 
 All three shell out to `scripts/jev_ask.py`, which prints the typed answer (mock when
 keyless). Use them when *you* want a fast structured call without spending Claude tokens

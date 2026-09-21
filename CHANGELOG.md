@@ -7,14 +7,16 @@ All notable changes to jeveloper are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
-- **Move search / Jev-as-evaluator** (`skills/jeveloper/scripts/jev_search.py`,
-  `/jeveloper:search`) — the chess analogy: Claude proposes candidate moves, Jev is the
-  evaluation function scoring each ply in one batched parallel call, a **beam** keeps the
-  top-k, lookahead recurses into likely `replies`, and **minimax/expectimax** (`us`/`them`/
-  `chance` plies) backs the scores up so the recommended move has the best *line*, not just
-  the best immediate look. Hard-capped at `MAX_CALLS=64` per search. Ships with
-  `reference/mode-search.md` and a worked `examples/move-search/` (a flaky-test fix where a
-  worst-case lookahead flips the greedy choice).
+- **Option search / Jev-as-evaluator** (`skills/jeveloper/scripts/jev_search.py`,
+  `/jeveloper:search`) — Claude proposes candidate options, Jev judges each in one batched
+  parallel call, a **beam** keeps the top-k, lookahead recurses into each option's `next`,
+  and the node's `mode` (`maximize`/`minimize`/`average`) backs the scores up so the
+  recommended option has the best *outcome*, not just the best immediate look. Hard-capped at
+  `MAX_CALLS=64` per search. Ships with `reference/mode-search.md` and a worked
+  `examples/search/` (a flaky-test fix where a worst-case lookahead flips the greedy choice).
+  Domain-neutral vocabulary — the game-engine framing is only an analogy in the docs.
+- **"Jev is the judge"** framing threaded through the skill and README: the three reflexes,
+  the tree, and the search are all one pattern — hand Jev an artifact, act on its verdict.
 - **Decision trees** (`skills/jeveloper/scripts/jev_tree.py`, `/jeveloper:tree`) — compose
   many Jev sub-decisions into one: fan out questions, branch on the answers (`noul`
   true/false with an uncertain-`band`, `choice` by option with a `margin`, `score` by
