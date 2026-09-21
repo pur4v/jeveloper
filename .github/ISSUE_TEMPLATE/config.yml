@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Jev / TypeSafe AI docs & keys
+    url: https://console.typesafe.ai/settings/keys
+    about: Get an API key, and check the Jev API docs for the request/response schema.
+  - name: Security report
+    url: https://github.com/pur4v/jeveloper/security/advisories/new
+    about: Please report vulnerabilities privately, not as a public issue.

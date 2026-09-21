@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# jeveloper local state / config (per project, not committed)
+.jeveloper.json
+jeveloper-warden-*.count
+
+# Secrets — never commit a real key
+.env
+*.key
+.typesafe
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/

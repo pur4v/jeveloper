@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint & validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Byte-compile the scripts (zero-dependency, stdlib only)
+        run: python3 -m py_compile skills/jeveloper/scripts/*.py
+
+      - name: Validate plugin, marketplace & hook manifests are JSON
+        run: |
+          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json hooks/hooks.json; do
+            echo "checking $f"
+            python3 -c "import json,sys; json.load(open('$f'))"
+          done
+
+      - name: Validate SKILL.md frontmatter
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, sys
+          text = pathlib.Path("skills/jeveloper/SKILL.md").read_text()
+          m = re.match(r'^---\n(.*?)\n---\n', text, re.S)
+          if not m:
+              sys.exit("SKILL.md is missing YAML frontmatter")
+          fm = m.group(1)
+          for key in ("name", "description"):
+              if not re.search(rf'^{key}:', fm, re.M):
+                  sys.exit(f"SKILL.md frontmatter missing required key: {key}")
+          print("SKILL.md frontmatter OK")
+          PY
+
+      - name: Check slash commands & agents have descriptions
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, sys
+          bad = []
+          for d in ("commands", "agents"):
+              for p in sorted(pathlib.Path(d).glob("*.md")):
+                  text = p.read_text()
+                  m = re.match(r'^---\n(.*?)\n---\n', text, re.S)
+                  if not m or not re.search(r'^description:', m.group(1), re.M):
+                      bad.append(str(p))
+          if bad:
+              sys.exit("missing frontmatter description: " + ", ".join(bad))
+          print("all commands & agents have a description")
+          PY
+
+      - name: Keyless smoke test — client is mock, hooks fail open
+        run: |
+          set -e
+          out=$(python3 skills/jeveloper/scripts/jev_client.py)
+          echo "$out"
+          echo "$out" | grep -q '"mock": true' || { echo "expected mock=true without a key"; exit 1; }
+
+          for script in route_gate check_output warden; do
+            printf '{"tool_name":"Bash","tool_input":{"command":"echo hi"},"session_id":"ci","transcript_path":"/nonexistent"}' \
+              | JEVELOPER_ENABLED=1 python3 "skills/jeveloper/scripts/$script.py"
+            code=$?
+            echo "$script exit=$code"
+            [ "$code" -eq 0 ] || { echo "$script must fail open (exit 0)"; exit 1; }
+          done
+          echo "keyless smoke test OK"

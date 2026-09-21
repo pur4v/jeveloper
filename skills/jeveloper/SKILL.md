@@ -1,0 +1,103 @@
+---
+name: jeveloper
+description: >-
+  A System-1 reflex layer for Claude Code, powered by TypeSafe AI's Jev. Jev makes fast,
+  cheap, typed decisions inside the agent loop so Claude reasons less and moves more
+  reliably. Use when you want an automatic guardrail on tool calls, an automatic check on
+  tool output, or an automatic "are we actually done?" judge that keeps the loop honest —
+  or when you want to hand a one-off routing/verification decision to a fast model instead
+  of spending Claude tokens on it. Triggers: "gate my tool calls", "verify this output",
+  "did this actually pass", "keep going until it's really done", "route this to the right
+  model", "should I run this command", "is the task complete", "ask Jev".
+---
+
+# jeveloper
+
+Jev is a **System One** model — fast, intuitive, one-pass, typed. Claude is System Two —
+deliberate and expensive. `jeveloper` wires Jev in as Claude's **reflexes**: cheap
+(~$0.042/M input tokens, output free) and quick (~70–500ms) typed judgements that fire
+automatically in the agent loop, so the slow, expensive reasoner spends its effort on the
+work instead of on second-guessing itself.
+
+Jev never generates prose. You give it **state** (text/JSON) and **typed questions**; it
+returns **typed probabilistic decisions**. Three question types cover everything here:
+
+| Type | Ask… | Get back |
+|---|---|---|
+| **Noul** | a yes/no | `noul`: P(true), 0–1 |
+| **Choice** | pick 1 of ≤255 | `choice` + per-option `probabilities` + `confidence` |
+| **Score** | position on an ordered scale | `score` (may land between levels) + `confidence` |
+
+## When to use this skill
+
+Reach for jeveloper when the job is *"make a fast, structured judgement in the loop and
+act on it"* — not open-ended reasoning (that's Claude's job) and not prose (Jev can't).
+It earns its keep on the decisions Claude makes constantly and cheaply-ish today: *is this
+command safe? did that test really pass? are we done?* Jev answers those ~100× cheaper and
+faster, deterministically, with a confidence number you can threshold on.
+
+Do **not** route genuinely open-ended reasoning, code authoring, or explanation through
+Jev — it returns a decision, not a solution.
+
+## The three reflexes
+
+| Reflex | Hook | What Jev decides | Reference |
+|---|---|---|---|
+| **Route** | `PreToolUse` | Is this tool call destructive / out-of-scope? (gate) — plus on-demand model/approach routing via `/jeveloper:route` | `reference/mode-route.md` |
+| **Check** | `PostToolUse` | Does this tool output actually indicate success and accomplish its intent? | `reference/mode-check.md` |
+| **Warden** | `Stop` | Is the task genuinely complete and verified, or should the loop continue? | `reference/mode-warden.md` |
+
+The reflexes run as hooks (`hooks/hooks.json`, wired to the scripts in `scripts/`). Read
+the relevant mode file before tuning or explaining that reflex. See `reference/hooks.md`
+for how the hooks are wired, the JSON contracts, and the config knobs.
+
+## The disciplines (non-negotiable)
+
+1. **Fail OPEN, always.** A reflex must never block the user because *jeveloper itself*
+   is unsure or unavailable. Disabled, keyless (mock), Jev unreachable, an error, or a
+   judgement below threshold → the hook exits 0 with no decision and the loop proceeds.
+   A guardrail that breaks the workflow when it breaks is worse than no guardrail.
+
+2. **Keyless is inert, not broken.** With no `TYPESAFE_API_KEY`, `jev_client.py` returns
+   clearly-flagged MOCK answers and every reflex fails open. The plugin installs safe and
+   does *nothing* until you both set a key and enable it (`/jeveloper:setup`).
+
+3. **Act on confidence, not vibes.** Every gate/check/continue decision is a threshold on
+   a Jev probability or score, configured in `.jeveloper.json`. No hidden heuristics.
+   Surface the number in the reason string so the user sees *why* Jev intervened.
+
+4. **The reflex is a signal, not a verdict.** When Check or Warden blocks, it hands Claude
+   a concern to re-examine — Claude still decides. jeveloper narrows attention; it does not
+   overrule the reasoner.
+
+## Enabling it
+
+Installing the plugin registers the hooks but leaves them **off** (`enabled: false`).
+To turn jeveloper on for a project:
+
+1. `export TYPESAFE_API_KEY=...` (from console.typesafe.ai/settings/keys).
+2. Run `/jeveloper:setup` — it writes `.jeveloper.json` (thresholds + master switch),
+   confirms the key resolves, and shows a live mock/real probe.
+
+Tune `.jeveloper.json` per project: which tools Route gates, the Check fail threshold, the
+Warden `done_threshold` and `max_continues`, and an optional standing `goal` the Warden
+judges completeness against. Full schema in `reference/hooks.md`.
+
+## On-demand decisions (no hook needed)
+
+Beyond the automatic reflexes, hand Jev a single decision with:
+
+- `/jeveloper:route` — Jev picks among options you give it (models, subagents, approaches).
+- `/jeveloper:check` — Jev verifies a specific output or claim you paste in.
+- `/jeveloper:ask` — pose any raw typed question (noul/choice/score).
+
+All three shell out to `scripts/jev_ask.py`, which prints the typed answer (mock when
+keyless). Use them when *you* want a fast structured call without spending Claude tokens
+deliberating.
+
+## Output principles
+
+- Lead with the decision and the number: "Jev: unsafe p=0.91 → denied", not a paragraph.
+- Name the reflex and the threshold it crossed, so the intervention is auditable.
+- When mock/keyless, say so plainly — a mock answer is "no opinion", never a real 0.5.
+- Never present a Jev probability as a fact. It is a fast estimate; Claude verifies.
