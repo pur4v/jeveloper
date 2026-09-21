@@ -91,6 +91,6 @@ jobs:
             python3 -c "import json; json.load(open('$spec'))"
             out=$(python3 skills/jeveloper/scripts/jev_search.py "$spec" "example state for CI")
             echo "$out"
-            echo "$out" | grep -q '^BEST MOVE:' || { echo "search produced no BEST MOVE for $spec"; exit 1; }
+            echo "$out" | grep -q '^BEST OPTION:' || { echo "search produced no BEST OPTION for $spec"; exit 1; }
           done
-          echo "move search OK"
+          echo "option search OK"
