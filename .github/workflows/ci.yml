@@ -72,3 +72,14 @@ jobs:
             [ "$code" -eq 0 ] || { echo "$script must fail open (exit 0)"; exit 1; }
           done
           echo "keyless smoke test OK"
+
+      - name: Decision tree runs (mock) and validates example specs
+        run: |
+          set -e
+          for spec in examples/decision-tree/*.json; do
+            python3 -c "import json; json.load(open('$spec'))"
+            out=$(python3 skills/jeveloper/scripts/jev_tree.py "$spec" "example state for CI")
+            echo "$out"
+            echo "$out" | grep -q '^FINAL:' || { echo "tree produced no FINAL decision for $spec"; exit 1; }
+          done
+          echo "decision tree OK"

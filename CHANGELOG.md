@@ -6,6 +6,15 @@ All notable changes to jeveloper are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+- **Decision trees** (`skills/jeveloper/scripts/jev_tree.py`, `/jeveloper:tree`) — compose
+  many Jev sub-decisions into one: fan out questions, branch on the answers (`noul`
+  true/false with an uncertain-`band`, `choice` by option with a `margin`, `score` by
+  level), and **recursively reduce** the leaves via `and`/`or`/`mean`/`max`/`min`/`argmax`/
+  `first`. Each tree level is one batched (parallel) Jev call, so exploring multiple
+  branches at once stays cheap. Ships with `reference/mode-tree.md` and a worked spec +
+  expected traces in `examples/decision-tree/`.
+
 ## [0.1.0] — 2026-09-21
 
 First public release.

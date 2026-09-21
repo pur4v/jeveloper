@@ -1,0 +1,64 @@
+{
+  "id": "auto_merge",
+  "reduce": "and",
+  "children": [
+    {
+      "id": "tests_green",
+      "question": {
+        "type": "noul",
+        "instructions": "All CI checks passed and no relevant test was skipped, errored, or is flaky."
+      }
+    },
+    {
+      "id": "low_risk",
+      "reduce": "and",
+      "children": [
+        {
+          "id": "no_migrations",
+          "question": {
+            "type": "noul",
+            "instructions": "The diff contains no database migrations or schema changes."
+          }
+        },
+        {
+          "id": "no_auth_or_infra",
+          "question": {
+            "type": "noul",
+            "instructions": "The diff does not touch authentication, authorization, secrets, or infrastructure/deploy config."
+          }
+        }
+      ]
+    },
+    {
+      "id": "scope",
+      "question": {
+        "type": "noul",
+        "instructions": "The PR shows scope creep: changes beyond what its title/description promises.",
+        "threshold": 0.5
+      },
+      "explore": true,
+      "band": [0.35, 0.65],
+      "reduce": "argmax",
+      "children": {
+        "true": [
+          {
+            "id": "creep_justified",
+            "question": {
+              "type": "noul",
+              "instructions": "Every out-of-scope change is nonetheless necessary and safe for this PR."
+            }
+          }
+        ],
+        "false": [
+          {
+            "id": "scope_ok",
+            "question": {
+              "type": "noul",
+              "instructions": "The PR stays cleanly within its stated scope."
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

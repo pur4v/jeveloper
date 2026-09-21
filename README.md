@@ -82,6 +82,17 @@ and runs a live/mock probe. Tune anything in `.jeveloper.json` — see
 | `/jeveloper:route` | Jev picks among options (models, subagents, approaches) |
 | `/jeveloper:check` | Jev verifies an output/claim you paste in |
 | `/jeveloper:ask` | any raw typed question — `noul` / `choice` / `score` |
+| `/jeveloper:tree` | compose many sub-decisions into one — branched + recursively reduced |
+
+### Decision trees
+
+A hard call is rarely one question. `/jeveloper:tree` (and `scripts/jev_tree.py`) evaluates
+a **tree** of Jev sub-decisions — fan them out, branch on the answers, and **recursively
+reduce** the leaves to one final decision with a full, auditable trace. Jev answers each
+tree *level* in one parallel request, so a dozen sub-decisions cost ~3 batched calls and
+exploring multiple branches at once is nearly free. See
+[`skills/jeveloper/reference/mode-tree.md`](skills/jeveloper/reference/mode-tree.md) and the
+worked spec in [`examples/decision-tree/`](examples/decision-tree/README.md).
 
 ## How it fits together
 
@@ -108,10 +119,10 @@ jeveloper/
 ├── skills/jeveloper/
 │   ├── SKILL.md          the skill (three reflexes + disciplines)
 │   ├── reference/        jev-api · mode-route · mode-check · mode-warden · hooks
-│   └── scripts/          jev_client · jev_config · route_gate · check_output · warden · jev_ask
-├── commands/             /jeveloper: setup · route · check · ask
+│   └── scripts/          jev_client · jev_config · route_gate · check_output · warden · jev_ask · jev_tree
+├── commands/             /jeveloper: setup · route · check · ask · tree
 ├── agents/               jev-adjudicator (batch typed verification)
-└── examples/             loop-walkthrough
+└── examples/             loop-walkthrough · decision-tree
 ```
 
 Zero dependencies — the scripts use only the Python standard library, so the hooks run with

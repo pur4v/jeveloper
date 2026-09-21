@@ -51,6 +51,16 @@ The reflexes run as hooks (`hooks/hooks.json`, wired to the scripts in `scripts/
 the relevant mode file before tuning or explaining that reflex. See `reference/hooks.md`
 for how the hooks are wired, the JSON contracts, and the config knobs.
 
+## Composing decisions — the tree
+
+A reflex asks Jev *one* thing at a fixed point. When a decision has **parts** — "safe to
+auto-merge?" = tests-green AND low-risk AND scope-ok — express it as a **decision tree**:
+fan out many Jev sub-decisions, branch on their answers, and **recursively reduce** the
+leaves into one final call. Because Jev answers a whole level of questions in one parallel
+request, each tree level is a single cheap call, so exploring multiple branches at once is
+practically free. Run trees with `/jeveloper:tree` (or `scripts/jev_tree.py`); the trace
+shows exactly which sub-decision swung the result. See `reference/mode-tree.md`.
+
 ## The disciplines (non-negotiable)
 
 1. **Fail OPEN, always.** A reflex must never block the user because *jeveloper itself*
@@ -90,6 +100,7 @@ Beyond the automatic reflexes, hand Jev a single decision with:
 - `/jeveloper:route` — Jev picks among options you give it (models, subagents, approaches).
 - `/jeveloper:check` — Jev verifies a specific output or claim you paste in.
 - `/jeveloper:ask` — pose any raw typed question (noul/choice/score).
+- `/jeveloper:tree` — compose many sub-decisions into one, branched and recursively reduced.
 
 All three shell out to `scripts/jev_ask.py`, which prints the typed answer (mock when
 keyless). Use them when *you* want a fast structured call without spending Claude tokens
