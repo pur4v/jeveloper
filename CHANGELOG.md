@@ -7,6 +7,14 @@ All notable changes to jeveloper are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **Move search / Jev-as-evaluator** (`skills/jeveloper/scripts/jev_search.py`,
+  `/jeveloper:search`) — the chess analogy: Claude proposes candidate moves, Jev is the
+  evaluation function scoring each ply in one batched parallel call, a **beam** keeps the
+  top-k, lookahead recurses into likely `replies`, and **minimax/expectimax** (`us`/`them`/
+  `chance` plies) backs the scores up so the recommended move has the best *line*, not just
+  the best immediate look. Hard-capped at `MAX_CALLS=64` per search. Ships with
+  `reference/mode-search.md` and a worked `examples/move-search/` (a flaky-test fix where a
+  worst-case lookahead flips the greedy choice).
 - **Decision trees** (`skills/jeveloper/scripts/jev_tree.py`, `/jeveloper:tree`) — compose
   many Jev sub-decisions into one: fan out questions, branch on the answers (`noul`
   true/false with an uncertain-`band`, `choice` by option with a `margin`, `score` by

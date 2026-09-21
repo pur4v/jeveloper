@@ -83,6 +83,7 @@ and runs a live/mock probe. Tune anything in `.jeveloper.json` — see
 | `/jeveloper:check` | Jev verifies an output/claim you paste in |
 | `/jeveloper:ask` | any raw typed question — `noul` / `choice` / `score` |
 | `/jeveloper:tree` | compose many sub-decisions into one — branched + recursively reduced |
+| `/jeveloper:search` | search candidate *moves* with Jev as the evaluator — beam + minimax lookahead |
 
 ### Decision trees
 
@@ -93,6 +94,25 @@ tree *level* in one parallel request, so a dozen sub-decisions cost ~3 batched c
 exploring multiple branches at once is nearly free. See
 [`skills/jeveloper/reference/mode-tree.md`](skills/jeveloper/reference/mode-tree.md) and the
 worked spec in [`examples/decision-tree/`](examples/decision-tree/README.md).
+
+### Move search — Jev as an evaluation function ♟️
+
+Sometimes the question isn't *"do these conditions hold?"* but *"which move do I make?"*.
+`/jeveloper:search` (and `scripts/jev_search.py`) treats it like a chess engine: **Claude
+proposes** candidate moves, **Jev scores** each ply (one batched, parallel call), a **beam**
+keeps the strongest, lookahead recurses into the likely replies (a `"them"` ply models the
+worst case), and **minimax** backs the scores up — so the recommended move is the one with
+the best *line*, catching the move that looks fine now but backs up badly. See
+[`skills/jeveloper/reference/mode-search.md`](skills/jeveloper/reference/mode-search.md) and
+[`examples/move-search/`](examples/move-search/README.md).
+
+|  | Chess | jeveloper |
+|---|---|---|
+| generate | legal moves | actions **Claude proposes** |
+| evaluate | eval function | **Jev** (`score`, one call per ply) |
+| prune | move ordering | **beam** (top-k) |
+| look ahead | opponent's reply | a `"them"` ply (worst-case) |
+| decide | minimax backup | best *line*, not best immediate move |
 
 ## How it fits together
 
@@ -119,10 +139,10 @@ jeveloper/
 ├── skills/jeveloper/
 │   ├── SKILL.md          the skill (three reflexes + disciplines)
 │   ├── reference/        jev-api · mode-route · mode-check · mode-warden · hooks
-│   └── scripts/          jev_client · jev_config · route_gate · check_output · warden · jev_ask · jev_tree
-├── commands/             /jeveloper: setup · route · check · ask · tree
+│   └── scripts/          jev_client · jev_config · route_gate · check_output · warden · jev_ask · jev_tree · jev_search
+├── commands/             /jeveloper: setup · route · check · ask · tree · search
 ├── agents/               jev-adjudicator (batch typed verification)
-└── examples/             loop-walkthrough · decision-tree
+└── examples/             loop-walkthrough · decision-tree · move-search
 ```
 
 Zero dependencies — the scripts use only the Python standard library, so the hooks run with
