@@ -84,7 +84,7 @@ search are that judge scaled up.
 
 | Reflex | Hook | Jev decides | You get |
 |---|---|---|---|
-| 🛑 **Route** | `PreToolUse` | is this call destructive / off-goal? | a fast **safety gate** that denies/asks before a risky tool runs — plus on-demand model routing via `/jeveloper:route` |
+| 🛑 **Route** *(opt-in)* | `PreToolUse` | is this call destructive / off-goal? | a fast **safety gate** that denies/asks before a risky tool runs — plus on-demand model routing via `/jeveloper:route` |
 | 🔎 **Check** | `PostToolUse` | did this output *actually* succeed & do its job? | the skipped-but-green test, the wrong edit, the buried error — **caught immediately** and fed back to Claude |
 | 🧭 **Warden** | `Stop` | is the task genuinely complete & verified? | the loop stops when the **work** is done, not when Claude first feels finished |
 
@@ -191,7 +191,7 @@ evaluation function** instead of a hand-written one. Nothing about it is game-sp
                        │             route_gate.py                check_output.py          warden.py
                        │                 │                             │                      │
                        └────────────── Jev (System One) — noul / choice / score, ~100ms ───────┘
-                                     TYPESAFE_API_KEY?  no → MOCK → every reflex fails open
+                        OPENROUTER_API_KEY / TYPESAFE_API_KEY?  no → MOCK → every reflex fails open
 ```
 
 See a full fictional session in
@@ -202,14 +202,15 @@ See a full fictional session in
 ```
 jeveloper/
 ├── .claude-plugin/       plugin.json + marketplace.json
-├── hooks/hooks.json      registers the three reflexes (inert until enabled)
+├── hooks/hooks.json      registers the reflexes (auto-on when a key is set; Route opt-in)
 ├── skills/jeveloper/
-│   ├── SKILL.md          the skill (three reflexes + disciplines)
-│   ├── reference/        jev-api · mode-route · mode-check · mode-warden · hooks
+│   ├── SKILL.md          the skill (reflexes + tree + search + drive)
+│   ├── reference/        jev-api · hooks · mode-route · mode-check · mode-warden · mode-tree · mode-search · mode-drive
 │   └── scripts/          jev_client · jev_config · jev_meter · route_gate · check_output · warden
 │                         · jev_ask · jev_tree · jev_search · jev_next
-├── commands/             /jeveloper: setup · route · check · ask · tree · search · drive · stats
+├── commands/             /jeveloper: setup · route · check · ask · tree · search · drive · stats · demo
 ├── agents/               jev-adjudicator (batch typed verification)
+├── demo.sh               one-command live demo
 └── examples/             loop-walkthrough · decision-tree · search
 ```
 
@@ -219,8 +220,9 @@ no `pip install`.
 ## Status & caveats
 
 Jev is new (public early access, Sept 2026). The request/response schema is pinned to
-**OpenRouter's Decisions API** (`choice`/`score` use a `criteria` map; `choice`/`score`
-responses return `probabilities`+`confidence`, chosen = argmax) and `jev_client.py` reads it
+**OpenRouter's Decisions API**, verified live: `choice`'s `criteria` is a **map** but
+`score`'s is an **array**; `choice`/`score` responses return `probabilities`+`confidence`
+(chosen = argmax) and `score` also a scalar `score`+`legend`. `jev_client.py` reads all of it
 defensively. Set `OPENROUTER_API_KEY` (preferred) or `TYPESAFE_API_KEY`; until then
 everything runs in safe MOCK mode. The thinking-token savings in driver mode are an estimate
 until benchmarked with a real key (Jev's own spend *is* measured, from the API `usage`). See
