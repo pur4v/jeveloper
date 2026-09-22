@@ -18,8 +18,10 @@ import os
 import sys
 
 DEFAULTS: dict = {
-    # Master switch. Ships OFF: the plugin does nothing until you opt in.
-    "enabled": False,
+    # Master switch. "auto" (default) = ON whenever a Jev key is in the environment, OFF
+    # otherwise — so installing + setting a key is all it takes, no config file needed.
+    # Set true/false in .jeveloper.json (or JEVELOPER_ENABLED=1/0) to force it.
+    "enabled": "auto",
     # Which Jev provider to use. "auto" = OpenRouter if OPENROUTER_API_KEY is set, else
     # TypeSafe native. Force one with "openrouter" or "direct" (aka "typesafe"). The key is
     # ALWAYS read from the environment (api_key_env names the var) — never stored here.
@@ -33,7 +35,9 @@ DEFAULTS: dict = {
     # empty the warden falls back to the transcript's own most recent user request.
     "goal": "",
     "route": {
-        "enabled": True,
+        # Opt-in: Route is the one reflex that can *block* a tool call, so it stays OFF by
+        # default even when enabled. Turn it on in .jeveloper.json when you want the gate.
+        "enabled": False,
         # Only these tools are gated (a matcher is also set in hooks.json; this is
         # the second, finer gate). Empty list = gate everything the hook receives.
         "tools": ["Bash"],
@@ -81,7 +85,17 @@ def load_config(cwd: str | None = None) -> dict:
     env = os.environ.get("JEVELOPER_ENABLED")
     if env is not None:
         cfg["enabled"] = env not in ("0", "false", "False", "")
+    elif cfg.get("enabled") in ("auto", None):
+        cfg["enabled"] = _key_present(cfg)  # zero-config: on when a key is set
     return cfg
+
+
+def _key_present(cfg: dict) -> bool:
+    names = ["OPENROUTER_API_KEY", "TYPESAFE_API_KEY"]
+    custom = (cfg.get("provider") or {}).get("api_key_env")
+    if custom:
+        names.insert(0, custom)
+    return any(os.environ.get(n) for n in names)
 
 
 def mode_enabled(cfg: dict, mode: str) -> bool:

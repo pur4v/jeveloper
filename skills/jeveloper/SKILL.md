@@ -116,19 +116,20 @@ doesn't write). See `reference/mode-drive.md`.
    a concern to re-examine — Claude still decides. jeveloper narrows attention; it does not
    overrule the reasoner.
 
-## Enabling it
+## Enabling it (zero-config)
 
-Installing the plugin registers the hooks but leaves them **off** (`enabled: false`).
-To turn jeveloper on for a project:
+**A Jev key in the environment is all it takes.** With `OPENROUTER_API_KEY` (or
+`TYPESAFE_API_KEY`) set, the master switch is `auto` → **on**, and **Check + Warden** run
+with sane defaults. No `/jeveloper:setup`, no `.jeveloper.json` required. No key → MOCK →
+everything silently fails open.
 
-1. `export OPENROUTER_API_KEY=...` (Jev via OpenRouter) or `export TYPESAFE_API_KEY=...`
-   (native). OpenRouter wins if both are set.
-2. Run `/jeveloper:setup` — it writes `.jeveloper.json` (thresholds + master switch),
-   confirms the key resolves, and shows a live mock/real probe.
+The **Route** gate is the one exception: it can *block* a tool call, so it stays **opt-in**
+even when enabled — turn it on with `{"route": {"enabled": true}}` in `.jeveloper.json`.
 
-Tune `.jeveloper.json` per project: which tools Route gates, the Check fail threshold, the
-Warden `done_threshold` and `max_continues`, and an optional standing `goal` the Warden
-judges completeness against. Full schema in `reference/hooks.md`.
+Everything else is optional tuning in `.jeveloper.json` (Check `fail_threshold`, Warden
+`done_threshold`/`max_continues`, a standing `goal`, provider choice). Full schema in
+`reference/hooks.md`. `/jeveloper:setup` can write it for you but is not needed; run
+`/jeveloper:demo` (or `bash demo.sh`) to see it work in one shot.
 
 ## On-demand decisions (no hook needed)
 
@@ -141,6 +142,7 @@ Beyond the automatic reflexes, hand Jev a single decision with:
 - `/jeveloper:search` — search candidate *options* with Jev as the judge (beam + lookahead).
 - `/jeveloper:drive` — run the Jev-driven loop (Jev decides → execute → Jev verifies → repeat).
 - `/jeveloper:stats` — decisions offloaded to Jev + estimated thinking-tokens saved.
+- `/jeveloper:demo` — run a few live Jev decisions and show the measured cost (one shot).
 
 All three shell out to `scripts/jev_ask.py`, which prints the typed answer (mock when
 keyless). Use them when *you* want a fast structured call without spending Claude tokens

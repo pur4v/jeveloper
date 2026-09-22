@@ -12,8 +12,9 @@ is installed. Each runs a stdlib-only Python script via `${CLAUDE_PLUGIN_ROOT}`:
 | `Stop` | (all) | `scripts/warden.py` |
 
 Registration ≠ activation. Every script first loads config and **exits 0 immediately** if
-jeveloper (or that reflex) is disabled — which is the default. So installing the plugin is
-inert until you opt in.
+jeveloper (or that reflex) is disabled. The master switch defaults to `"auto"` → **on when a
+Jev key is in the environment**, off otherwise — so a fresh install is inert until a key is
+set, then Check + Warden activate automatically (Route stays opt-in).
 
 ## Hook I/O contracts used
 
@@ -31,9 +32,11 @@ that path hard (see the fail-open discipline).
 
 Lives in the **project root** (the cwd Claude runs in). Written by `/jeveloper:setup`.
 
+All fields are optional — a key in the env is enough to run. Values shown are the defaults.
+
 ```json
 {
-  "enabled": true,
+  "enabled": "auto",          // auto = on when a Jev key is set; or true / false to force
   "goal": "Ship the CSV export endpoint with tests and docs",
 
   "provider": {
@@ -44,7 +47,7 @@ Lives in the **project root** (the cwd Claude runs in). Written by `/jeveloper:s
   },
 
   "route": {
-    "enabled": true,
+    "enabled": false,         // opt-in: Route can BLOCK a tool call, so it's off by default
     "tools": ["Bash"],
     "deny_threshold": 0.85,
     "ask_threshold": 0.60
@@ -61,7 +64,8 @@ Lives in the **project root** (the cwd Claude runs in). Written by `/jeveloper:s
 }
 ```
 
-- `enabled` — master switch. Ships `false`. `JEVELOPER_ENABLED=1`/`0` overrides it.
+- `enabled` — master switch. Defaults to `"auto"` (on when a Jev key is present). Set `true`/
+  `false` to force; `JEVELOPER_ENABLED=1`/`0` overrides everything.
 - `provider.use` — `auto` (default) / `openrouter` / `direct`. `JEVELOPER_PROVIDER` overrides
   it. An explicit choice never silently falls back to the other provider. Keys stay in the
   env (`api_key_env`, else the provider default).

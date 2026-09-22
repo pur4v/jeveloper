@@ -106,3 +106,11 @@ jobs:
           echo "$rep"
           echo "$rep" | grep -q 'decisions offloaded' || { echo "meter report malformed"; exit 1; }
           echo "driver + meter OK"
+
+      - name: demo.sh runs (mock, no key)
+        run: |
+          set -e
+          out=$(bash demo.sh)
+          echo "$out"
+          echo "$out" | grep -q 'jeveloper demo' || { echo "demo.sh did not run"; exit 1; }
+          echo "demo OK"

@@ -25,6 +25,28 @@ actually done?*
 
 ---
 
+## Quickstart
+
+```bash
+export OPENROUTER_API_KEY=sk-or-…      # your Jev key (or TYPESAFE_API_KEY for direct)
+```
+```
+/plugin marketplace add pur4v/jeveloper
+/plugin install jeveloper
+```
+
+**That's it.** With a key set, jeveloper is **on** — it verifies your tool output and keeps
+the loop open until the work is actually done, automatically. No config file, no setup step.
+
+- **See it work in one command:** `bash demo.sh` (or `/jeveloper:demo`)
+- **Let Jev drive:** `/jeveloper:drive "add a /health endpoint with a passing test"`
+- **What did it cost:** `/jeveloper:stats`
+
+No key? Everything still runs, silently (MOCK mode) — nothing breaks. Want the safety gate
+that can block risky commands too? It's opt-in: `echo '{"route":{"enabled":true}}' > .jeveloper.json`.
+
+---
+
 ## Driver mode — offload the *deciding* to Jev ⚡
 
 The reflexes below are guardrails around Claude. **Driver mode** (`/jeveloper:drive`) flips
@@ -80,8 +102,8 @@ emits prose.
    hook exits 0 and the loop proceeds untouched. A guardrail that breaks *your* work when
    *it* breaks is worse than none.
 2. **Keyless is inert, not broken.** No Jev key (`OPENROUTER_API_KEY`/`TYPESAFE_API_KEY`) →
-   MOCK answers → every reflex silent. Installing the plugin does nothing until you set a key
-   **and** opt in.
+   MOCK answers → every reflex silent. Set a key and Check + Warden turn on automatically
+   (the Route gate stays opt-in, since it can block commands).
 3. **Act on confidence, not vibes.** Every intervention is a threshold on a Jev probability
    or score, set in `.jeveloper.json`, with the number shown in the reason.
 4. **The reflex is a signal, not a verdict.** Check/Warden hand Claude a concern to
@@ -96,24 +118,26 @@ emits prose.
 
 Or use just the skill: copy `skills/jeveloper/` into your `.claude/skills/`.
 
-## Enable (per project)
+## Configure (optional)
 
-```bash
-# pick ONE provider — key stays in the env, never in a file:
-export OPENROUTER_API_KEY=sk-or-…   # Jev via OpenRouter (model ~typesafe/jev-latest)
-#   …or…
-export TYPESAFE_API_KEY=…           # Jev direct (TypeSafe native)
-```
-```
-/jeveloper:setup "optional standing goal for the Warden"
+You don't need to configure anything — a key in the env is enough. When you *want* to tune,
+drop a `.jeveloper.json` in the project root (all fields optional):
+
+```json
+{
+  "goal": "the standing objective the Warden judges 'done' against",
+  "provider": { "use": "auto" },          // auto | openrouter | direct
+  "route":  { "enabled": true },          // opt-in: the gate that can block commands
+  "check":  { "fail_threshold": 0.80 },
+  "warden": { "done_threshold": 7.0, "max_continues": 3 }
+}
 ```
 
-`/jeveloper:setup` records the **provider choice** (`auto` / `openrouter` / `direct`) and the
-env-var *name* in `.jeveloper.json` — never the key itself — then verifies and probes it.
-Auto-detect uses OpenRouter if its key is set, else TypeSafe; force one with
-`provider.use` or `JEVELOPER_PROVIDER`. It also writes the master switch + thresholds and
-runs a live/mock probe. Tune anything in `.jeveloper.json` — see
-[`skills/jeveloper/reference/hooks.md`](skills/jeveloper/reference/hooks.md).
+The key always stays in the **environment** (`OPENROUTER_API_KEY` / `TYPESAFE_API_KEY`),
+never in this file. Provider auto-detects (OpenRouter if its key is set, else TypeSafe);
+force one with `provider.use` or `JEVELOPER_PROVIDER`. Full schema:
+[`skills/jeveloper/reference/hooks.md`](skills/jeveloper/reference/hooks.md). `/jeveloper:setup`
+can write this for you, but it's optional.
 
 ## On-demand (no hooks needed)
 
@@ -126,6 +150,7 @@ runs a live/mock probe. Tune anything in `.jeveloper.json` — see
 | `/jeveloper:search` | search candidate *options* with Jev as the judge — beam + lookahead |
 | `/jeveloper:drive` | run the Jev-driven loop — Jev decides → you execute → Jev verifies → repeat |
 | `/jeveloper:stats` | decisions offloaded to Jev + estimated thinking-tokens saved |
+| `/jeveloper:demo` | run a few live Jev decisions and show the measured cost |
 
 ### Decision trees
 

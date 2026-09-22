@@ -15,6 +15,10 @@ selection" splits into two truthful pieces:
 
 Don't pretend the gate is doing routing. It is a safety veto with a confidence number.
 
+> **Route is opt-in.** Because it can *block* a tool call, it stays off even when jeveloper is
+> enabled. Turn it on with `{"route": {"enabled": true}}` in `.jeveloper.json`. Check and
+> Warden (which only add feedback / continue the loop) are the ones that auto-enable with a key.
+
 ## The gate: `route_gate.py`
 
 For each matched tool call (default: `Bash`), Jev is asked two `noul` questions against the

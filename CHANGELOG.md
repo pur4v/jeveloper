@@ -6,7 +6,17 @@ All notable changes to jeveloper are documented here. The format is based on
 
 ## [Unreleased]
 
+### Changed
+- **Zero-config activation.** The master switch now defaults to `"auto"` — jeveloper turns
+  **on** as soon as a Jev key is in the environment, with Check + Warden running on sane
+  defaults. No `/jeveloper:setup` and no `.jeveloper.json` required. The **Route** gate (the
+  only reflex that can block a tool call) is now **opt-in** even when enabled, so a fresh
+  install never surprises anyone by denying a command. `.jeveloper.json` and `/jeveloper:setup`
+  remain for optional tuning.
+
 ### Added
+- **`demo.sh` / `/jeveloper:demo`** — run a few real Jev decisions (skipped-test check, model
+  routing, next-action pick, an auto-merge tree) and print the measured cost, in one command.
 - **Selectable provider** — users can add **OpenRouter** or **direct** (TypeSafe native), by
   config or env. `.jeveloper.json` gains a `provider` block (`use: auto|openrouter|direct`,
   optional `model`/`api_url`/`api_key_env`); `JEVELOPER_PROVIDER` overrides it; `/jeveloper:setup`
