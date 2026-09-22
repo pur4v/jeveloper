@@ -40,6 +40,12 @@ All notable changes to jeveloper are documented here. The format is based on
   trivial (greeting, two-word remark), a synthetic placeholder (tool-only turn or the no-goal
   fallback), or its own feedback text, and no longer treats a placeholder-only turn as the
   user's request. It guards real work only, and only when no explicit `goal` is configured.
+- **Warden ignores system-injected turns.** Task notifications (subagent results), system
+  reminders, and its own Stop-hook feedback all land in the transcript as `user` turns, so the
+  warden could latch onto one — e.g. a returned capability table — as the objective and block
+  the stop. It now skips any turn carrying an injection marker (`<system-reminder>`,
+  `<task-notification>`, `<tool-use-id>`, `</note>`, `Stop hook feedback:`) when choosing the
+  objective, and treats such content as trivial if it ever slips through.
 - **Warden no longer blocks answered questions.** For a pure question objective (ends with
   "?"), the "every acceptance criterion verified in recent activity" test never fits, so a
   fully answered question stayed stuck below the `met` threshold. Questions now release on

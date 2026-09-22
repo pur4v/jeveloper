@@ -37,6 +37,18 @@ _GREETINGS = {
 _PLACEHOLDER_RE = re.compile(r"\(tool_result\)|\(tool_use:[^)]*\)")
 _NO_GOAL = "(no explicit goal found in transcript)"
 
+# Substrings that mark a "user" turn as system-injected (task notifications, system
+# reminders, our own Stop-hook feedback) rather than a real user request.
+_INJECTED_MARKERS = (
+    "<system-reminder>", "<task-notification>", "</task-notification>",
+    "<tool-use-id>", "</note>", "stop hook feedback:",
+)
+
+
+def _is_injected(text: str) -> bool:
+    t = text.lower()
+    return any(m in t for m in _INJECTED_MARKERS)
+
 
 def _is_trivial_objective(text: str) -> bool:
     """True when there is nothing real to verify — a greeting, a tiny remark, a synthetic
@@ -47,6 +59,9 @@ def _is_trivial_objective(text: str) -> bool:
         return True
     # A turn that was only tool_result / tool_use blocks carries no objective.
     if not _PLACEHOLDER_RE.sub("", t).strip():
+        return True
+    # System-injected content (task notifications, system reminders) is never an objective.
+    if _is_injected(t):
         return True
     # Our own Stop-hook feedback lands in the transcript as a user message; never grade it.
     if "jev warden" in t and "completeness" in t:
@@ -104,7 +119,8 @@ def _recent_transcript(path: str, max_chars: int = MAX_STATE_CHARS) -> tuple[str
                 text = _flatten(content)
                 if not text:
                     continue
-                if role == "user" and _PLACEHOLDER_RE.sub("", text).strip():
+                if (role == "user" and _PLACEHOLDER_RE.sub("", text).strip()
+                        and not _is_injected(text)):
                     last_user = text
                 lines.append(f"[{role}] {text}")
     except OSError:
