@@ -47,6 +47,13 @@ All notable changes to jeveloper are documented here. The format is based on
   questions are answered, not "verified".
 
 ### Added
+- **Live Jev status spinners.** Each Jev hook now sets `statusMessage`, so Claude Code shows a
+  labelled spinner while the call runs — `⚡ Jev checking this action…` (route),
+  `⚡ Jev verifying the result…` (check), `⚡ Jev judging if the task is done…` (warden) — making
+  Jev's inline latency visible instead of a silent pause. Takes effect after a session reload,
+  since hook registration is read once at startup. (An inline end-of-turn *summary* line isn't
+  possible: a `Stop` hook has no user-visible message channel; only `terminalSequence`
+  bell/notification is available there.)
 - **`demo.sh` / `/jeveloper:demo`** — run a few real Jev decisions (skipped-test check, model
   routing, next-action pick, an auto-merge tree) and print the measured cost, in one command.
 - **Selectable provider** — users can add **OpenRouter** or **direct** (TypeSafe native), by

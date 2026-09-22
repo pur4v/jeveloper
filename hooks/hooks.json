@@ -16,7 +16,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/jeveloper/scripts/route_gate.py\""
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/jeveloper/scripts/route_gate.py\"",
+            "statusMessage": "⚡ Jev checking this action…"
           }
         ]
       }
@@ -27,7 +28,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/jeveloper/scripts/check_output.py\""
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/jeveloper/scripts/check_output.py\"",
+            "statusMessage": "⚡ Jev verifying the result…"
           }
         ]
       }
@@ -37,7 +39,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/jeveloper/scripts/warden.py\""
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/jeveloper/scripts/warden.py\"",
+            "statusMessage": "⚡ Jev judging if the task is done…"
           }
         ]
       }
