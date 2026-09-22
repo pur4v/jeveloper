@@ -116,20 +116,20 @@ doesn't write). See `reference/mode-drive.md`.
    a concern to re-examine — Claude still decides. jeveloper narrows attention; it does not
    overrule the reasoner.
 
-## Enabling it (zero-config)
+## Enabling it (zero-config, everything on)
 
 **A Jev key in the environment is all it takes.** With `OPENROUTER_API_KEY` (or
-`TYPESAFE_API_KEY`) set, the master switch is `auto` → **on**, and **Check + Warden** run
-with sane defaults. No `/jeveloper:setup`, no `.jeveloper.json` required. No key → MOCK →
-everything silently fails open.
+`TYPESAFE_API_KEY`) set, the master switch is `auto` → **on**, and the whole loop runs
+automatically on every turn: **drive** (Jev decides the next action, injected each turn),
+**route** (Jev gates every tool call — matcher `*`), **check** (Jev verifies every output),
+**warden** (Jev holds the loop open until done). No `/jeveloper:setup`, no `.jeveloper.json`
+required. No key → MOCK → everything silently fails open.
 
-The **Route** gate is the one exception: it can *block* a tool call, so it stays **opt-in**
-even when enabled — turn it on with `{"route": {"enabled": true}}` in `.jeveloper.json`.
-
-Everything else is optional tuning in `.jeveloper.json` (Check `fail_threshold`, Warden
-`done_threshold`/`max_continues`, a standing `goal`, provider choice). Full schema in
-`reference/hooks.md`. `/jeveloper:setup` can write it for you but is not needed; run
-`/jeveloper:demo` (or `bash demo.sh`) to see it work in one shot.
+This is heavy by design — a Jev call around every action. Dial it back per project in
+`.jeveloper.json`: set any of `drive`/`route`/`check`/`warden` `enabled: false`, narrow
+`route.tools`, or tune thresholds. Full schema in `reference/hooks.md`. `/jeveloper:setup`
+can write it for you but isn't needed; run `/jeveloper:demo` (or `bash demo.sh`) to see it
+work in one shot.
 
 ## On-demand decisions (no hook needed)
 

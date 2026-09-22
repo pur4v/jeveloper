@@ -114,3 +114,14 @@ jobs:
           echo "$out"
           echo "$out" | grep -q 'jeveloper demo' || { echo "demo.sh did not run"; exit 1; }
           echo "demo OK"
+
+      - name: Drive injection hook (UserPromptSubmit)
+        run: |
+          set -e
+          # keyless -> silent (drive disabled), must exit 0 with no output
+          out=$(python3 skills/jeveloper/scripts/drive_inject.py </dev/null)
+          [ -z "$out" ] || { echo "drive_inject should be silent without a key"; exit 1; }
+          # with a (fake) key -> injects the standing instruction
+          out=$(OPENROUTER_API_KEY=x python3 skills/jeveloper/scripts/drive_inject.py </dev/null)
+          echo "$out" | grep -q 'UserPromptSubmit' || { echo "drive_inject should inject with a key"; exit 1; }
+          echo "drive injection OK"

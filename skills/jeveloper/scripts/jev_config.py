@@ -34,13 +34,14 @@ DEFAULTS: dict = {
     # A standing objective the warden judges "done-ness" against. Optional; when
     # empty the warden falls back to the transcript's own most recent user request.
     "goal": "",
+    # Jev drives every turn — the always-on ping-pong, injected by the UserPromptSubmit hook.
+    "drive": {"enabled": True},
     "route": {
-        # Opt-in: Route is the one reflex that can *block* a tool call, so it stays OFF by
-        # default even when enabled. Turn it on in .jeveloper.json when you want the gate.
-        "enabled": False,
-        # Only these tools are gated (a matcher is also set in hooks.json; this is
-        # the second, finer gate). Empty list = gate everything the hook receives.
-        "tools": ["Bash"],
+        "enabled": True,
+        # Which tools the gate applies to. Empty list = gate EVERYTHING the hook receives
+        # (hooks.json matcher is "*", so that's every tool). Narrow it here if the latency of
+        # a Jev call on read-only tools isn't worth it.
+        "tools": [],
         # P(unsafe) at/above this -> deny; at/above ask_threshold -> ask; else allow.
         "deny_threshold": 0.85,
         "ask_threshold": 0.60,

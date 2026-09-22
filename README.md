@@ -35,15 +35,20 @@ export OPENROUTER_API_KEY=sk-or-…      # your Jev key (or TYPESAFE_API_KEY for
 /plugin install jeveloper
 ```
 
-**That's it.** With a key set, jeveloper is **on** — it verifies your tool output and keeps
-the loop open until the work is actually done, automatically. No config file, no setup step.
+**That's it.** With a key set, jeveloper runs the whole loop through Jev, automatically, on
+every turn — no command, no config:
+
+- **Jev decides** each next action (it's the first call, before Claude acts),
+- **Jev gates** every tool call (can deny/ask on something destructive),
+- **Jev verifies** every tool's output, and
+- **Jev holds the loop open** until the work is genuinely done.
 
 - **See it work in one command:** `bash demo.sh` (or `/jeveloper:demo`)
-- **Let Jev drive:** `/jeveloper:drive "add a /health endpoint with a passing test"`
 - **What did it cost:** `/jeveloper:stats`
 
-No key? Everything still runs, silently (MOCK mode) — nothing breaks. Want the safety gate
-that can block risky commands too? It's opt-in: `echo '{"route":{"enabled":true}}' > .jeveloper.json`.
+No key? Everything still runs, silently (MOCK mode) — nothing breaks. It's heavy by design
+(a Jev call around every action); dial it back per project in `.jeveloper.json` (disable a
+reflex, or narrow `route.tools`) if you want less.
 
 ---
 
@@ -84,7 +89,7 @@ search are that judge scaled up.
 
 | Reflex | Hook | Jev decides | You get |
 |---|---|---|---|
-| 🛑 **Route** *(opt-in)* | `PreToolUse` | is this call destructive / off-goal? | a fast **safety gate** that denies/asks before a risky tool runs — plus on-demand model routing via `/jeveloper:route` |
+| 🛑 **Route** | `PreToolUse` (all tools) | is this call destructive / off-goal? | a fast **safety gate** that denies/asks before a risky tool runs — plus on-demand model routing via `/jeveloper:route` |
 | 🔎 **Check** | `PostToolUse` | did this output *actually* succeed & do its job? | the skipped-but-green test, the wrong edit, the buried error — **caught immediately** and fed back to Claude |
 | 🧭 **Warden** | `Stop` | is the task genuinely complete & verified? | the loop stops when the **work** is done, not when Claude first feels finished |
 
@@ -102,8 +107,8 @@ emits prose.
    hook exits 0 and the loop proceeds untouched. A guardrail that breaks *your* work when
    *it* breaks is worse than none.
 2. **Keyless is inert, not broken.** No Jev key (`OPENROUTER_API_KEY`/`TYPESAFE_API_KEY`) →
-   MOCK answers → every reflex silent. Set a key and Check + Warden turn on automatically
-   (the Route gate stays opt-in, since it can block commands).
+   MOCK answers → every reflex silent. Set a key and the whole loop (drive + route + check +
+   warden) turns on automatically, on every turn — no command, no config.
 3. **Act on confidence, not vibes.** Every intervention is a threshold on a Jev probability
    or score, set in `.jeveloper.json`, with the number shown in the reason.
 4. **The reflex is a signal, not a verdict.** Check/Warden hand Claude a concern to
@@ -127,11 +132,15 @@ drop a `.jeveloper.json` in the project root (all fields optional):
 {
   "goal": "the standing objective the Warden judges 'done' against",
   "provider": { "use": "auto" },          // auto | openrouter | direct
-  "route":  { "enabled": true },          // opt-in: the gate that can block commands
-  "check":  { "fail_threshold": 0.80 },
-  "warden": { "done_threshold": 7.0, "max_continues": 3 }
+  "drive":  { "enabled": true },          // Jev decides every action (set false to stop driving)
+  "route":  { "enabled": true, "tools": [] },  // gate every tool; narrow tools, or false to disable
+  "check":  { "enabled": true, "fail_threshold": 0.80 },
+  "warden": { "enabled": true, "done_threshold": 7.0, "max_continues": 3 }
 }
 ```
+
+All four run by default with a key. Set any to `false` (or narrow `route.tools`) to dial it
+back — this is a lot of Jev calls by design.
 
 The key always stays in the **environment** (`OPENROUTER_API_KEY` / `TYPESAFE_API_KEY`),
 never in this file. Provider auto-detects (OpenRouter if its key is set, else TypeSafe);
@@ -202,11 +211,11 @@ See a full fictional session in
 ```
 jeveloper/
 ├── .claude-plugin/       plugin.json + marketplace.json
-├── hooks/hooks.json      registers the reflexes (auto-on when a key is set; Route opt-in)
+├── hooks/hooks.json      registers all four hooks (auto-on with a key: drive+route+check+warden)
 ├── skills/jeveloper/
 │   ├── SKILL.md          the skill (reflexes + tree + search + drive)
 │   ├── reference/        jev-api · hooks · mode-route · mode-check · mode-warden · mode-tree · mode-search · mode-drive
-│   └── scripts/          jev_client · jev_config · jev_meter · route_gate · check_output · warden
+│   └── scripts/          jev_client · jev_config · jev_meter · drive_inject · route_gate · check_output · warden
 │                         · jev_ask · jev_tree · jev_search · jev_next
 ├── commands/             /jeveloper: setup · route · check · ask · tree · search · drive · stats · demo
 ├── agents/               jev-adjudicator (batch typed verification)

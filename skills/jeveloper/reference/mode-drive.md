@@ -4,6 +4,11 @@ Driver mode is the full ping-pong: **Jev decides the next action, Claude execute
 verifies the output, repeat.** The reflexes/tree/search let Claude *consult* Jev; driver mode
 puts Jev **in the driver's seat** so Claude stops spending reasoning tokens on decisions.
 
+**It's always-on with a key** — the `UserPromptSubmit` hook (`drive_inject.py`) injects the
+standing "defer to Jev" instruction into every turn, so this happens automatically without
+running any command. `/jeveloper:drive` is just the manual/explicit form. Turn it off with
+`{"drive": {"enabled": false}}` in `.jeveloper.json`.
+
 ```
 objective ─▶ Claude enumerates 2–5 candidate actions (cheap, no deep reasoning)
                      │

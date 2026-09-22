@@ -2,19 +2,21 @@
 
 ## How the reflexes are wired
 
-`hooks/hooks.json` (at the plugin root) registers three Claude Code hooks when the plugin
+`hooks/hooks.json` (at the plugin root) registers four Claude Code hooks when the plugin
 is installed. Each runs a stdlib-only Python script via `${CLAUDE_PLUGIN_ROOT}`:
 
-| Event | Matcher | Script |
-|---|---|---|
-| `PreToolUse` | `Bash\|Edit\|Write\|MultiEdit\|NotebookEdit` | `scripts/route_gate.py` |
-| `PostToolUse` | `Bash\|Edit\|Write\|MultiEdit\|Task` | `scripts/check_output.py` |
-| `Stop` | (all) | `scripts/warden.py` |
+| Event | Matcher | Script | Role |
+|---|---|---|---|
+| `UserPromptSubmit` | (all) | `scripts/drive_inject.py` | **drive** — inject "defer to Jev" each turn |
+| `PreToolUse` | `*` (all tools) | `scripts/route_gate.py` | **route** — gate the call |
+| `PostToolUse` | `*` (all tools) | `scripts/check_output.py` | **check** — verify the output |
+| `Stop` | (all) | `scripts/warden.py` | **warden** — hold the loop open |
 
 Registration ≠ activation. Every script first loads config and **exits 0 immediately** if
 jeveloper (or that reflex) is disabled. The master switch defaults to `"auto"` → **on when a
 Jev key is in the environment**, off otherwise — so a fresh install is inert until a key is
-set, then Check + Warden activate automatically (Route stays opt-in).
+set, then **all four** (drive + route + check + warden) activate automatically, on every
+tool and every turn.
 
 ## Hook I/O contracts used
 
@@ -46,9 +48,10 @@ All fields are optional — a key in the env is enough to run. Values shown are 
     "api_key_env": ""         // optional: custom env var holding the key
   },
 
+  "drive":  { "enabled": true },   // Jev decides every action (injected each turn)
   "route": {
-    "enabled": false,         // opt-in: Route can BLOCK a tool call, so it's off by default
-    "tools": ["Bash"],
+    "enabled": true,          // gate every tool call
+    "tools": [],              // [] = every tool the "*" matcher sends; narrow to reduce cost
     "deny_threshold": 0.85,
     "ask_threshold": 0.60
   },
@@ -69,6 +72,8 @@ All fields are optional — a key in the env is enough to run. Values shown are 
 - `provider.use` — `auto` (default) / `openrouter` / `direct`. `JEVELOPER_PROVIDER` overrides
   it. An explicit choice never silently falls back to the other provider. Keys stay in the
   env (`api_key_env`, else the provider default).
+- `drive.enabled` — Jev drives every turn (default true). Set false to stop the injected
+  "defer to Jev" instruction and go back to Claude deciding on its own.
 - `goal` — optional standing objective the Warden judges completeness against.
 - Per-reflex `enabled` lets you run, say, only Check + Warden and leave the gate off.
 - Later sources win: DEFAULTS → `.jeveloper.json` → `JEVELOPER_ENABLED` env.

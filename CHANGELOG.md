@@ -7,12 +7,18 @@ All notable changes to jeveloper are documented here. The format is based on
 ## [Unreleased]
 
 ### Changed
-- **Zero-config activation.** The master switch now defaults to `"auto"` — jeveloper turns
-  **on** as soon as a Jev key is in the environment, with Check + Warden running on sane
-  defaults. No `/jeveloper:setup` and no `.jeveloper.json` required. The **Route** gate (the
-  only reflex that can block a tool call) is now **opt-in** even when enabled, so a fresh
-  install never surprises anyone by denying a command. `.jeveloper.json` and `/jeveloper:setup`
-  remain for optional tuning.
+- **Everything on, for every action.** With a Jev key set, jeveloper now runs the whole loop
+  automatically on every turn — matching the original spec (Jev is the *first* call for
+  action selection, verifies output, works the loop):
+  - **drive** — a new `UserPromptSubmit` hook (`drive_inject.py`) injects a standing
+    "defer to Jev" instruction each turn, so Claude enumerates options and lets `jev_next`
+    pick, with no `/jeveloper:drive` command needed.
+  - **route** — now **on by default** and gates **every** tool call (`hooks.json` matcher
+    `*`, `route.tools: []`), not just Bash/Edit.
+  - **check** / **warden** — verify every output / hold the loop open, as before.
+  Master switch stays `"auto"` (on when a key is present). This is heavy by design — a Jev
+  call around every action; disable any of `drive`/`route`/`check`/`warden` or narrow
+  `route.tools` in `.jeveloper.json` to dial it back.
 
 ### Added
 - **`demo.sh` / `/jeveloper:demo`** — run a few real Jev decisions (skipped-test check, model
