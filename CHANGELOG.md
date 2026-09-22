@@ -6,6 +6,16 @@ All notable changes to jeveloper are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+- **Install-time key prompt.** `plugin.json` now declares an `openrouter_api_key`
+  `userConfig` field (sensitive, required), so `/plugin install jeveloper` asks for the key
+  and stores it in the OS keychain — no shell export, no hand-edited `settings.json`, and it
+  reaches the hooks reliably instead of depending on the launching shell's environment.
+  `jev_client` and `jev_config` read the key from either the plain env var
+  (`OPENROUTER_API_KEY` / `TYPESAFE_API_KEY`, still supported) or the plugin-config form
+  Claude Code injects (`CLAUDE_PLUGIN_OPTION_<NAME>`), via a new `_env_key` helper. README
+  quickstart updated to the prompt-based flow and the one-time restart it requires.
+
 ### Changed
 - **Everything on, for every action.** With a Jev key set, jeveloper now runs the whole loop
   automatically on every turn — matching the original spec (Jev is the *first* call for

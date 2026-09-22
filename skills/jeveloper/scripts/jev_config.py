@@ -96,7 +96,9 @@ def _key_present(cfg: dict) -> bool:
     custom = (cfg.get("provider") or {}).get("api_key_env")
     if custom:
         names.insert(0, custom)
-    return any(os.environ.get(n) for n in names)
+    # A key may come from a plain env export OR from the plugin's userConfig prompt,
+    # which Claude Code injects as CLAUDE_PLUGIN_OPTION_<NAME>. Accept either form.
+    return any(os.environ.get(n) or os.environ.get("CLAUDE_PLUGIN_OPTION_" + n) for n in names)
 
 
 def mode_enabled(cfg: dict, mode: str) -> bool:

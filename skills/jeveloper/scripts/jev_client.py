@@ -49,6 +49,15 @@ _PROVIDERS = {
 _ALIASES = {"direct": "typesafe", "native": "typesafe", "openrouter.ai": "openrouter"}
 
 
+def _env_key(name: str):
+    """Read an API key from the environment. Accepts both the bare variable (e.g.
+    OPENROUTER_API_KEY, from a shell export) and the form Claude Code injects for a
+    plugin userConfig field entered at install time (CLAUDE_PLUGIN_OPTION_<NAME>)."""
+    if not name:
+        return None
+    return os.environ.get(name) or os.environ.get("CLAUDE_PLUGIN_OPTION_" + name)
+
+
 def _provider_cfg() -> dict:
     """Read the `provider` block from .jeveloper.json (best-effort; {} if absent)."""
     try:
@@ -71,7 +80,7 @@ def _resolve():
 
     def build(name: str):
         url, model, default_env = _PROVIDERS[name]
-        key = (os.environ.get(key_env) if key_env else None) or os.environ.get(default_env)
+        key = _env_key(key_env) or _env_key(default_env)
         if not key:
             return None
         return (override_url or url, override_model or model, key)

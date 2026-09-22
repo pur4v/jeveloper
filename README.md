@@ -27,13 +27,20 @@ actually done?*
 
 ## Quickstart
 
-```bash
-export OPENROUTER_API_KEY=sk-or-…      # your Jev key (or TYPESAFE_API_KEY for direct)
-```
 ```
 /plugin marketplace add pur4v/jeveloper
 /plugin install jeveloper
 ```
+
+Install **prompts you for your OpenRouter API key** (get one at
+[openrouter.ai/keys](https://openrouter.ai/keys)) and stores it securely in your OS keychain
+— never in the repo or in `settings.json`. Then **restart Claude Code once** so the hooks
+load (a plugin's hooks only register at startup).
+
+> Prefer TypeSafe's native API, or driving the key from your shell? Export
+> `OPENROUTER_API_KEY` (or `TYPESAFE_API_KEY`) instead of using the prompt — jeveloper reads
+> either. Change the stored key later with `claude plugin configure jeveloper` +
+> `/reload-plugins`.
 
 **That's it.** With a key set, jeveloper runs the whole loop through Jev, automatically, on
 every turn — no command, no config:

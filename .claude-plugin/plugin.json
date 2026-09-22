@@ -1,7 +1,7 @@
 {
   "name": "jeveloper",
   "description": "A System-1 reflex layer for Claude Code, powered by TypeSafe AI's Jev. Jev makes fast, cheap, typed decisions in the agent loop — route/gate tool calls, verify tool output, and judge task completion — so Claude reasons less and moves more reliably.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "pur4v",
     "url": "https://github.com/pur4v"
@@ -9,6 +9,15 @@
   "homepage": "https://github.com/pur4v/jeveloper",
   "repository": "https://github.com/pur4v/jeveloper",
   "license": "MIT",
+  "userConfig": {
+    "openrouter_api_key": {
+      "type": "string",
+      "title": "OpenRouter API key",
+      "description": "API key for Jev decisions via OpenRouter (get one at openrouter.ai/keys). Stored securely in your OS keychain — never written to the repo or to settings.json. Without a key jeveloper stays inert (mock mode), so set this to make Jev actually run on every action.",
+      "sensitive": true,
+      "required": true
+    }
+  },
   "keywords": [
     "jev",
     "typesafe",

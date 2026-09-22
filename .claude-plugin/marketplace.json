@@ -9,7 +9,7 @@
       "name": "jeveloper",
       "source": "./",
       "description": "A System-1 reflex layer for Claude Code, powered by Jev — route/gate tool calls, verify tool output, and judge task completion with fast, cheap, typed decisions.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "productivity",
       "homepage": "https://github.com/pur4v/jeveloper",
       "tags": [
