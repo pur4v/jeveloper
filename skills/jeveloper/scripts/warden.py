@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import tempfile
 
@@ -23,6 +24,39 @@ import jev_client as jc  # noqa: E402
 import jev_config as cfg_mod  # noqa: E402
 
 MAX_STATE_CHARS = 16000
+
+# Greetings and pleasantries that carry no task to verify.
+_GREETINGS = {
+    "hi", "hello", "hey", "yo", "sup", "hiya", "howdy", "hey there",
+    "good morning", "good afternoon", "good evening", "gm", "gn",
+    "thanks", "thank you", "thx", "ty", "ok", "okay", "k", "cool",
+    "nice", "great", "got it", "sounds good", "bye", "cya",
+}
+
+# Artifacts _flatten() emits for tool-only turns — never a real objective on their own.
+_PLACEHOLDER_RE = re.compile(r"\(tool_result\)|\(tool_use:[^)]*\)")
+_NO_GOAL = "(no explicit goal found in transcript)"
+
+
+def _is_trivial_objective(text: str) -> bool:
+    """True when there is nothing real to verify — a greeting, a tiny remark, a synthetic
+    placeholder (tool-only turn / no-goal fallback), or the warden's own feedback fed back
+    in as a user turn (which would loop forever)."""
+    t = text.strip().lower().rstrip("!.?")
+    if not t or t == _NO_GOAL:
+        return True
+    # A turn that was only tool_result / tool_use blocks carries no objective.
+    if not _PLACEHOLDER_RE.sub("", t).strip():
+        return True
+    # Our own Stop-hook feedback lands in the transcript as a user message; never grade it.
+    if "jev warden" in t and "completeness" in t:
+        return True
+    if t in _GREETINGS:
+        return True
+    # Very short with no real ask (e.g. "hi!", "yo", "ok cool").
+    if len(t) <= 12 and len(t.split()) <= 2:
+        return True
+    return False
 
 
 def _counter_path(session_id: str) -> str:
@@ -70,7 +104,7 @@ def _recent_transcript(path: str, max_chars: int = MAX_STATE_CHARS) -> tuple[str
                 text = _flatten(content)
                 if not text:
                     continue
-                if role == "user":
+                if role == "user" and _PLACEHOLDER_RE.sub("", text).strip():
                     last_user = text
                 lines.append(f"[{role}] {text}")
     except OSError:
@@ -118,6 +152,10 @@ def main() -> None:
     latest_user, tail = _recent_transcript(data.get("transcript_path", ""))
     objective = goal or latest_user or "(no explicit goal found in transcript)"
 
+    if not goal and _is_trivial_objective(objective):
+        _reset_counter(counter_path)
+        cfg_mod.fail_open("trivial/greeting objective — nothing to verify")
+
     state = {
         "objective": objective,
         "recent_activity": tail or "(transcript unavailable)",
@@ -162,9 +200,12 @@ def main() -> None:
         _reset_counter(counter_path)
         cfg_mod.fail_open(f"agent looks blocked (p={blocked:.2f}) — letting it stop")
 
-    if score >= done_threshold and met >= 0.5:
+    # A pure question is "done" when it's answered well; completeness captures that, and the
+    # "every criterion verified" test doesn't fit an answer-only turn, so don't require `met`.
+    is_question = objective.strip().endswith("?")
+    if score >= done_threshold and (met >= 0.5 or is_question):
         _reset_counter(counter_path)
-        cfg_mod.fail_open(f"done (score={score:.1f}, met={met:.2f})")
+        cfg_mod.fail_open(f"done (score={score:.1f}, met={met:.2f}, question={is_question})")
         return
 
     _write_counter(counter_path, continues + 1)

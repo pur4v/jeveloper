@@ -30,6 +30,22 @@ All notable changes to jeveloper are documented here. The format is based on
   call around every action; disable any of `drive`/`route`/`check`/`warden` or narrow
   `route.tools` in `.jeveloper.json` to dial it back.
 
+### Fixed
+- **Warden no longer loops on non-task objectives.** The Stop hook took the latest user turn
+  as the objective and blocked the stop whenever Jev judged it incomplete — misfiring three
+  ways with no real work to do: a bare greeting ("hi"); a tool-only user turn that `_flatten`
+  renders as `(tool_result)`; and the warden's own feedback, which lands in the transcript as
+  a user turn, so each pass re-ingested the previous block as the new objective — a runaway
+  that only released at `max_continues`. The warden now fails open when the objective is
+  trivial (greeting, two-word remark), a synthetic placeholder (tool-only turn or the no-goal
+  fallback), or its own feedback text, and no longer treats a placeholder-only turn as the
+  user's request. It guards real work only, and only when no explicit `goal` is configured.
+- **Warden no longer blocks answered questions.** For a pure question objective (ends with
+  "?"), the "every acceptance criterion verified in recent activity" test never fits, so a
+  fully answered question stayed stuck below the `met` threshold. Questions now release on
+  completeness alone (once `score >= done_threshold`), matching the driver rule that pure
+  questions are answered, not "verified".
+
 ### Added
 - **`demo.sh` / `/jeveloper:demo`** — run a few real Jev decisions (skipped-test check, model
   routing, next-action pick, an auto-merge tree) and print the measured cost, in one command.
