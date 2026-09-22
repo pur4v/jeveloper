@@ -83,7 +83,7 @@ def _value_label(q: dict, ans: dict) -> tuple[float, str]:
         return p, ("yes" if p >= float(q.get("threshold", 0.5)) else "no")
     if t == "score":
         levels = q.get("criteria", [])
-        s = jc.score_of(ans)
+        s = jc.score_of(ans, levels)
         denom = max(len(levels) - 1, 1)
         val = max(0.0, min(1.0, s / denom))
         label = levels[min(len(levels) - 1, max(0, round(s)))] if levels else f"{s:.2f}"
@@ -91,7 +91,7 @@ def _value_label(q: dict, ans: dict) -> tuple[float, str]:
     if t == "choice":
         probs = ans.get("probabilities") or {}
         top = max(probs.values()) if probs else jc.confidence_of(ans)
-        return float(top), str(ans.get("choice"))
+        return float(top), str(jc.choice_of(ans))
     return 0.5, "?"
 
 
@@ -106,7 +106,7 @@ def _branch_keys(q: dict, ans: dict, node: dict) -> list[str]:
         return ["true" if p >= float(q.get("threshold", 0.5)) else "false"]
     if t == "choice":
         probs = ans.get("probabilities") or {}
-        chosen = str(ans.get("choice"))
+        chosen = str(jc.choice_of(ans))
         if node.get("explore") and probs:
             top = max(probs.values())
             margin = float(node.get("margin", 0.15))

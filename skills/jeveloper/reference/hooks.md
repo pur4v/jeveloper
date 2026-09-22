@@ -63,12 +63,18 @@ Lives in the **project root** (the cwd Claude runs in). Written by `/jeveloper:s
 
 | Var | Purpose | Default |
 |---|---|---|
-| `TYPESAFE_API_KEY` | Jev auth. Unset → MOCK mode → all reflexes fail open | — |
+| `OPENROUTER_API_KEY` | Jev via OpenRouter (preferred if set). Unset + no TypeSafe key → MOCK | — |
+| `TYPESAFE_API_KEY` | Jev via TypeSafe native. Both unset → MOCK → all reflexes fail open | — |
 | `JEVELOPER_ENABLED` | master-switch override (`1`/`0`) | (config) |
-| `JEVELOPER_API_URL` | Jev endpoint | `https://api.typesafe.ai/v1/systemone` |
-| `JEVELOPER_MODEL` | model id | `jev-latest` |
+| `JEVELOPER_API_URL` | override the Jev endpoint | provider default |
+| `JEVELOPER_MODEL` | override the model id | provider default |
 | `JEVELOPER_TIMEOUT` | request timeout, seconds | `5` |
+| `JEVELOPER_METRICS` | metrics log path | `.jeveloper/metrics.jsonl` |
+| `JEVELOPER_TOKENS_PER_DECISION` | per-decision estimate for the meter | `500` |
 | `JEVELOPER_DEBUG` | print fail-open reasons to stderr | off |
+
+Provider auto-detection: `OPENROUTER_API_KEY` → OpenRouter decisions API; else
+`TYPESAFE_API_KEY` → TypeSafe native; else MOCK. See `reference/jev-api.md`.
 
 ## Debugging
 

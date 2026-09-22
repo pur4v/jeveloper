@@ -42,7 +42,7 @@ def choose(state: str, objective: str, options: list[dict]) -> dict:
     )
     ans = result.get("answers", {}).get("next", {})
     probs = ans.get("probabilities") or {}
-    chosen = ans.get("choice")
+    chosen = jc.choice_of(ans)
     if result.get("mock") or chosen is None:
         chosen = options[0]["id"] if options else None
     return {

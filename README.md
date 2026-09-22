@@ -186,10 +186,12 @@ no `pip install`.
 
 ## Status & caveats
 
-Jev is new (public early access, Sept 2026). The `noul`/response schema is pinned to
-TypeSafe's public examples; the exact request field for **choice/score options** is not
-fully documented yet and is isolated in `jev_client.py` so it's a one-line fix once you have
-the console docs. Until a key is set, everything runs in safe MOCK mode. See
+Jev is new (public early access, Sept 2026). The request/response schema is pinned to
+**OpenRouter's Decisions API** (`choice`/`score` use a `criteria` map; `choice`/`score`
+responses return `probabilities`+`confidence`, chosen = argmax) and `jev_client.py` reads it
+defensively. Set `OPENROUTER_API_KEY` (preferred) or `TYPESAFE_API_KEY`; until then
+everything runs in safe MOCK mode. The thinking-token savings in driver mode are an estimate
+until benchmarked with a real key (Jev's own spend *is* measured, from the API `usage`). See
 [`skills/jeveloper/reference/jev-api.md`](skills/jeveloper/reference/jev-api.md).
 
 ## License

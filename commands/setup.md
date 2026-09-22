@@ -7,10 +7,11 @@ Set up **jeveloper** in the current project. Any argument is the standing `goal`
 
 Do this in order:
 
-1. **Check the key.** Confirm `TYPESAFE_API_KEY` is set in the environment. If it is not,
-   tell the user jeveloper will run in inert MOCK mode (all reflexes fail open) until they
-   `export TYPESAFE_API_KEY=…` from https://console.typesafe.ai/settings/keys — then
-   continue setup anyway (a keyless install is valid and safe).
+1. **Check the key.** Confirm `OPENROUTER_API_KEY` (preferred) or `TYPESAFE_API_KEY` is set
+   in the environment. If neither is, tell the user jeveloper will run in inert MOCK mode
+   (all reflexes fail open) until they set one — `OPENROUTER_API_KEY` (Jev via OpenRouter,
+   model `typesafe/jev-latest`) or `TYPESAFE_API_KEY` (native) — then continue setup anyway
+   (a keyless install is valid and safe). Never echo the key.
 
 2. **Write `.jeveloper.json`** in the project root using the schema in
    `skills/jeveloper/reference/hooks.md`. Set `enabled: true`, set `goal` to the argument

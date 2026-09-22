@@ -7,6 +7,13 @@ All notable changes to jeveloper are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **OpenRouter provider** — `jev_client` now auto-detects the provider from the environment:
+  `OPENROUTER_API_KEY` → OpenRouter Decisions API (`/api/alpha/decisions`, model
+  `typesafe/jev-latest`), else `TYPESAFE_API_KEY` → TypeSafe native, else MOCK. Request/
+  response schema pinned to OpenRouter's confirmed shape (`criteria` map for `choice`/
+  `score`; responses carry `probabilities`+`confidence`, chosen = argmax), read defensively
+  via `choice_of`/`score_of`/`noul_of`. Real `usage.cost`/`input_tokens` are captured and
+  reported by the meter as measured Jev spend.
 - **Driver mode** (`/jeveloper:drive`, `skills/jeveloper/scripts/jev_next.py`) — puts Jev in
   the driver's seat to cut Claude's thinking-token cost: Claude cheaply enumerates candidate
   next actions, `jev_next` (a `choice`) picks one, Claude executes it, the Check hook
@@ -65,9 +72,9 @@ First public release.
 - Project docs: `README`, `SECURITY`, `CONTRIBUTING`, `CODE_OF_CONDUCT`, and CI.
 
 ### Known limitations
-- Jev's request field names for `choice`/`score` options follow public examples and are not
-  yet confirmed against the console docs; they are isolated in `jev_client.py` for a
-  one-line fix. The default keyless MOCK path does not depend on them.
+- Jev's `choice`/`score` request field names followed public examples and were not yet
+  confirmed against provider docs (isolated in `jev_client.py`). *Resolved in Unreleased:
+  pinned to OpenRouter's Decisions API (`criteria` map; argmax `choice`).*
 
 [Unreleased]: https://github.com/pur4v/jeveloper/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/pur4v/jeveloper/releases/tag/v0.1.0

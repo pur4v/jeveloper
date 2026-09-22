@@ -121,7 +121,8 @@ doesn't write). See `reference/mode-drive.md`.
 Installing the plugin registers the hooks but leaves them **off** (`enabled: false`).
 To turn jeveloper on for a project:
 
-1. `export TYPESAFE_API_KEY=...` (from console.typesafe.ai/settings/keys).
+1. `export OPENROUTER_API_KEY=...` (Jev via OpenRouter) or `export TYPESAFE_API_KEY=...`
+   (native). OpenRouter wins if both are set.
 2. Run `/jeveloper:setup` — it writes `.jeveloper.json` (thresholds + master switch),
    confirms the key resolves, and shows a live mock/real probe.
 

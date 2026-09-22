@@ -12,11 +12,12 @@ acknowledgement within a few days and a fix or mitigation timeline after triage.
 jeveloper runs as Claude Code **hooks** and shells out to a third-party API (TypeSafe AI's
 Jev). Keep these properties in mind:
 
-- **Your key.** `TYPESAFE_API_KEY` is read from the environment and sent only to the Jev
-  endpoint (`JEVELOPER_API_URL`, default `https://api.typesafe.ai/v1/systemone`) as a Bearer
-  header. It is never written to disk by this plugin, never logged, and never placed in a
-  URL. `.jeveloper.json` holds only thresholds — never the key. `.gitignore` excludes
-  `.env`, `*.key`, and `.jeveloper.json`.
+- **Your key.** `OPENROUTER_API_KEY` or `TYPESAFE_API_KEY` is read from the environment and
+  sent only to the resolved Jev endpoint (OpenRouter `…/api/alpha/decisions` or TypeSafe
+  `…/v1/systemone`) as a Bearer header. It is never written to disk by this plugin, never
+  logged, and never placed in a URL. `.jeveloper.json` holds only thresholds — never the key;
+  `.jeveloper/metrics.jsonl` holds only counts/cost — never state or keys. `.gitignore`
+  excludes `.env`, `*.key`, `.jeveloper.json`, and `.jeveloper/`.
 
 - **What leaves your machine.** When a reflex is enabled and a key is set, the relevant
   **state is sent to Jev**: tool commands + a truncated slice of tool output (Check), the

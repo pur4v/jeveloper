@@ -85,7 +85,7 @@ def _score_options(node: dict, state, objective: str, criteria: list[str], budge
     denom = max(len(criteria) - 1, 1)
     scores = {}
     for o in options:
-        s = jc.score_of(answers.get(o["id"], {}))
+        s = jc.score_of(answers.get(o["id"], {}), criteria)
         scores[o["id"]] = max(0.0, min(1.0, s / denom))
     return scores, False
 
