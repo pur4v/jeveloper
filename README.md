@@ -25,6 +25,33 @@ actually done?*
 
 ---
 
+## Driver mode — offload the *deciding* to Jev ⚡
+
+The reflexes below are guardrails around Claude. **Driver mode** (`/jeveloper:drive`) flips
+the relationship to cut Claude's most expensive tokens — the *reasoning it spends deciding
+what to do*:
+
+```
+objective ─▶ Claude enumerates 2–5 candidate actions (cheap — no deep reasoning)
+                 │
+            jev_next ── Jev picks one (choice, ~100 ms, ~free)
+                 │
+            Claude executes the chosen action
+                 │
+            Check hook ── Jev verifies the output ──▶ ok → loop · problem → fix + re-run
+                 │
+            Warden hook ── Jev judges completion ──▶ done → stop · not done → keep going
+```
+
+A continuous ping-pong: **Jev decides, Claude executes, Jev verifies, repeat.** Picking
+*which subagent to spawn* is just one such decision. Every decision is metered, so the
+saving is reported by `/jeveloper:stats`, not asserted.
+
+Honest limits: generation can't be offloaded (Jev decides, it doesn't write code), each
+verify-block costs a turn, and the token saving is an **estimate** until benchmarked with a
+real key. It wins on **decision-heavy, well-scoped** work. See
+[`skills/jeveloper/reference/mode-drive.md`](skills/jeveloper/reference/mode-drive.md).
+
 ## One idea: Jev is the judge
 
 Every capability is the same move — put something in front of Jev and act on its verdict.
@@ -90,6 +117,8 @@ and runs a live/mock probe. Tune anything in `.jeveloper.json` — see
 | `/jeveloper:ask` | any raw typed question — `noul` / `choice` / `score` |
 | `/jeveloper:tree` | compose many sub-decisions into one — branched + recursively reduced |
 | `/jeveloper:search` | search candidate *options* with Jev as the judge — beam + lookahead |
+| `/jeveloper:drive` | run the Jev-driven loop — Jev decides → you execute → Jev verifies → repeat |
+| `/jeveloper:stats` | decisions offloaded to Jev + estimated thinking-tokens saved |
 
 ### Decision trees
 
@@ -145,8 +174,9 @@ jeveloper/
 ├── skills/jeveloper/
 │   ├── SKILL.md          the skill (three reflexes + disciplines)
 │   ├── reference/        jev-api · mode-route · mode-check · mode-warden · hooks
-│   └── scripts/          jev_client · jev_config · route_gate · check_output · warden · jev_ask · jev_tree · jev_search
-├── commands/             /jeveloper: setup · route · check · ask · tree · search
+│   └── scripts/          jev_client · jev_config · jev_meter · route_gate · check_output · warden
+│                         · jev_ask · jev_tree · jev_search · jev_next
+├── commands/             /jeveloper: setup · route · check · ask · tree · search · drive · stats
 ├── agents/               jev-adjudicator (batch typed verification)
 └── examples/             loop-walkthrough · decision-tree · search
 ```

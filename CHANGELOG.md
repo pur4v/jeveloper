@@ -7,6 +7,16 @@ All notable changes to jeveloper are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **Driver mode** (`/jeveloper:drive`, `skills/jeveloper/scripts/jev_next.py`) — puts Jev in
+  the driver's seat to cut Claude's thinking-token cost: Claude cheaply enumerates candidate
+  next actions, `jev_next` (a `choice`) picks one, Claude executes it, the Check hook
+  verifies the output, and the loop repeats until the Warden is satisfied — a continuous
+  ping-pong. Subagent selection is just a `jev_next` decision. See `reference/mode-drive.md`.
+- **Decision meter** (`skills/jeveloper/scripts/jev_meter.py`, `/jeveloper:stats`) — every
+  Jev call is recorded (`kind`, decisions, live/mock) to `.jeveloper/metrics.jsonl`, and the
+  report estimates thinking-tokens saved (`live_decisions × JEVELOPER_TOKENS_PER_DECISION`,
+  default 500), clearly labelled an estimate; mock calls offloaded nothing and are excluded.
+  `jev_client.ask()` now takes a `kind` tag and meters every call best-effort.
 - **Option search / Jev-as-evaluator** (`skills/jeveloper/scripts/jev_search.py`,
   `/jeveloper:search`) — Claude proposes candidate options, Jev judges each in one batched
   parallel call, a **beam** keeps the top-k, lookahead recurses into each option's `next`,

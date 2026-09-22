@@ -8,6 +8,7 @@ __pycache__/
 
 # jeveloper local state / config (per project, not committed)
 .jeveloper.json
+.jeveloper/
 jeveloper-warden-*.count
 
 # Secrets — never commit a real key

@@ -94,3 +94,15 @@ jobs:
             echo "$out" | grep -q '^BEST OPTION:' || { echo "search produced no BEST OPTION for $spec"; exit 1; }
           done
           echo "option search OK"
+
+      - name: Driver primitive (jev_next) + meter run in mock mode
+        run: |
+          set -e
+          export JEVELOPER_METRICS="$RUNNER_TEMP/metrics.jsonl"
+          out=$(python3 skills/jeveloper/scripts/jev_next.py "some state" "some objective" a:"do A" b:"do B")
+          echo "$out"
+          echo "$out" | grep -q '"mock": true' || { echo "jev_next should be mock without a key"; exit 1; }
+          rep=$(python3 skills/jeveloper/scripts/jev_meter.py report)
+          echo "$rep"
+          echo "$rep" | grep -q 'decisions offloaded' || { echo "meter report malformed"; exit 1; }
+          echo "driver + meter OK"

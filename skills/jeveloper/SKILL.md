@@ -85,6 +85,18 @@ option that looks fine now but backs up badly. (If it helps: it's move-ordering 
 with Jev as the evaluation function — but nothing about it is game-specific.) Run with
 `/jeveloper:search` (or `scripts/jev_search.py`). See `reference/mode-search.md`.
 
+## Driver mode — Jev decides, Claude executes, Jev verifies
+
+The reflexes/tree/search let Claude *consult* Jev. **Driver mode** (`/jeveloper:drive`) puts
+Jev in the driver's seat to cut Claude's thinking-token cost: instead of deliberating what to
+do, Claude cheaply **enumerates** 2–5 candidate next actions, `jev_next` (a `choice`) **picks
+one**, Claude **executes** it, the Check hook **verifies** the output, and the loop repeats
+until the Warden hook says the objective is met — a continuous ping-pong with Jev. Selecting
+*which subagent* to spawn is just one such decision. Every decision is metered
+(`/jeveloper:stats`) so the token saving is reported, not asserted — honestly, as an
+*estimate*, and only on decision-heavy work (generation can't be offloaded; Jev decides, it
+doesn't write). See `reference/mode-drive.md`.
+
 ## The disciplines (non-negotiable)
 
 1. **Fail OPEN, always.** A reflex must never block the user because *jeveloper itself*
@@ -126,6 +138,8 @@ Beyond the automatic reflexes, hand Jev a single decision with:
 - `/jeveloper:ask` — pose any raw typed question (noul/choice/score).
 - `/jeveloper:tree` — compose many sub-decisions into one, branched and recursively reduced.
 - `/jeveloper:search` — search candidate *options* with Jev as the judge (beam + lookahead).
+- `/jeveloper:drive` — run the Jev-driven loop (Jev decides → execute → Jev verifies → repeat).
+- `/jeveloper:stats` — decisions offloaded to Jev + estimated thinking-tokens saved.
 
 All three shell out to `scripts/jev_ask.py`, which prints the typed answer (mock when
 keyless). Use them when *you* want a fast structured call without spending Claude tokens

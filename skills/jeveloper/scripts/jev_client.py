@@ -61,40 +61,49 @@ def _question_wire(q: dict) -> dict:
     return q
 
 
-def ask(state, questions: dict[str, dict], api_key: str | None = None) -> dict:
+def ask(state, questions: dict[str, dict], api_key: str | None = None,
+        kind: str = "ask") -> dict:
     """Pose typed questions to Jev about `state`. Returns:
 
         {"answers": {name: {...typed answer...}}, "mock": bool, "error": str | None}
 
-    Never raises for network/auth/parse problems — those come back as mock=True.
+    Never raises for network/auth/parse problems — those come back as mock=True. Every call
+    is metered (best-effort) so the thinking-token savings can be reported; `kind` tags the
+    call site (next / check / warden / route / tree / search / ask).
     """
     key = api_key or os.environ.get("TYPESAFE_API_KEY")
     if not key:
-        return _mock(questions, error="TYPESAFE_API_KEY not set")
+        result = _mock(questions, error="TYPESAFE_API_KEY not set")
+    else:
+        payload = {
+            "model": MODEL,
+            "state": state,
+            "questions": {name: _question_wire(q) for name, q in questions.items()},
+        }
+        req = urllib.request.Request(
+            API_URL,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {key}",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            # TypeSafe returns answers under "answers"; tolerate a flat top-level shape.
+            answers = data.get("answers", data) if isinstance(data, dict) else {}
+            result = {"answers": answers, "mock": False, "error": None}
+        except (urllib.error.URLError, TimeoutError, ValueError, OSError) as exc:
+            result = _mock(questions, error=f"{type(exc).__name__}: {exc}")
 
-    payload = {
-        "model": MODEL,
-        "state": state,
-        "questions": {name: _question_wire(q) for name, q in questions.items()},
-    }
-    req = urllib.request.Request(
-        API_URL,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {key}",
-        },
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-    except (urllib.error.URLError, TimeoutError, ValueError, OSError) as exc:
-        return _mock(questions, error=f"{type(exc).__name__}: {exc}")
-
-    # TypeSafe returns answers under "answers"; tolerate a flat top-level shape too.
-    answers = data.get("answers", data) if isinstance(data, dict) else {}
-    return {"answers": answers, "mock": False, "error": None}
+    try:  # metering is best-effort and must never affect the caller
+        import jev_meter
+        jev_meter.record(kind=kind, decisions=len(questions), mock=result.get("mock", True))
+    except Exception:
+        pass
+    return result
 
 
 def _mock(questions: dict[str, dict], error: str | None = None) -> dict:
