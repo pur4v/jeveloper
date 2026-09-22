@@ -79,8 +79,9 @@ emits prose.
 1. **Fail OPEN, always.** Disabled, keyless, Jev down, an error, or below threshold → the
    hook exits 0 and the loop proceeds untouched. A guardrail that breaks *your* work when
    *it* breaks is worse than none.
-2. **Keyless is inert, not broken.** No `TYPESAFE_API_KEY` → MOCK answers → every reflex
-   silent. Installing the plugin does nothing until you set a key **and** opt in.
+2. **Keyless is inert, not broken.** No Jev key (`OPENROUTER_API_KEY`/`TYPESAFE_API_KEY`) →
+   MOCK answers → every reflex silent. Installing the plugin does nothing until you set a key
+   **and** opt in.
 3. **Act on confidence, not vibes.** Every intervention is a threshold on a Jev probability
    or score, set in `.jeveloper.json`, with the number shown in the reason.
 4. **The reflex is a signal, not a verdict.** Check/Warden hand Claude a concern to
@@ -99,7 +100,7 @@ Or use just the skill: copy `skills/jeveloper/` into your `.claude/skills/`.
 
 ```bash
 # pick ONE provider — key stays in the env, never in a file:
-export OPENROUTER_API_KEY=sk-or-…   # Jev via OpenRouter (model typesafe/jev-latest)
+export OPENROUTER_API_KEY=sk-or-…   # Jev via OpenRouter (model ~typesafe/jev-latest)
 #   …or…
 export TYPESAFE_API_KEY=…           # Jev direct (TypeSafe native)
 ```
@@ -110,10 +111,8 @@ export TYPESAFE_API_KEY=…           # Jev direct (TypeSafe native)
 `/jeveloper:setup` records the **provider choice** (`auto` / `openrouter` / `direct`) and the
 env-var *name* in `.jeveloper.json` — never the key itself — then verifies and probes it.
 Auto-detect uses OpenRouter if its key is set, else TypeSafe; force one with
-`provider.use` or `JEVELOPER_PROVIDER`.
-
-`/jeveloper:setup` writes `.jeveloper.json` (thresholds + master switch), verifies the key,
-and runs a live/mock probe. Tune anything in `.jeveloper.json` — see
+`provider.use` or `JEVELOPER_PROVIDER`. It also writes the master switch + thresholds and
+runs a live/mock probe. Tune anything in `.jeveloper.json` — see
 [`skills/jeveloper/reference/hooks.md`](skills/jeveloper/reference/hooks.md).
 
 ## On-demand (no hooks needed)

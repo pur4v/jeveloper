@@ -13,7 +13,7 @@ All notable changes to jeveloper are documented here. The format is based on
   records the choice + env-var name (never the key). An explicit choice never silently falls
   back to the other provider. `jev_client` auto-detects when `use: auto`:
   `OPENROUTER_API_KEY` → OpenRouter Decisions API (`/api/alpha/decisions`, model
-  `typesafe/jev-latest`), else `TYPESAFE_API_KEY` → TypeSafe native, else MOCK. Request/
+  `~typesafe/jev-latest`), else `TYPESAFE_API_KEY` → TypeSafe native, else MOCK. Request/
   response schema pinned to OpenRouter's confirmed shape (`criteria` map for `choice`/
   `score`; responses carry `probabilities`+`confidence`, chosen = argmax), read defensively
   via `choice_of`/`score_of`/`noul_of`. Real `usage.cost`/`input_tokens` are captured and

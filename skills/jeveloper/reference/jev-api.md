@@ -11,7 +11,7 @@ keys are present**:
 
 | Provider | Endpoint | Auth env | Default model |
 |---|---|---|---|
-| **OpenRouter** | `POST https://openrouter.ai/api/alpha/decisions` | `OPENROUTER_API_KEY` | `typesafe/jev-latest` |
+| **OpenRouter** | `POST https://openrouter.ai/api/alpha/decisions` | `OPENROUTER_API_KEY` | `~typesafe/jev-latest` |
 | **TypeSafe native** | `POST https://api.typesafe.ai/v1/systemone` | `TYPESAFE_API_KEY` | `jev-latest` |
 
 Override either with `JEVELOPER_API_URL` / `JEVELOPER_MODEL`. Header on both:
@@ -44,15 +44,16 @@ are evaluated **in parallel** in one request — batch several rather than makin
 
 ## Question types
 
-| Type | Purpose | Request field | 
+| Type | Purpose | Request `criteria` |
 |---|---|---|
-| `noul` | yes/no truth judgement | — |
-| `choice` | pick 1 of up to 255 | `criteria`: `{option: description}` |
-| `score` | position on an ordered scale | `criteria`: `{level: description}`, low→high |
+| `noul` | yes/no truth judgement | — (none) |
+| `choice` | pick 1 of up to 255 | **object** `{option: description}` |
+| `score` | position on an ordered scale | **array** `["low", …, "high"]` |
 
-> The field is **`criteria`** (a map) for both `choice` and `score` — *not* `options`, and
-> not a list. `jev_client.choice()/score()` build this for you; a list passed to `score()`
-> is turned into an ordered `{level: level}` map.
+> ⚠️ The `criteria` shapes **differ** (confirmed live against the OpenRouter Decisions API):
+> `choice` takes an **object/map**, but `score` takes an **ordered array**. Sending the
+> wrong one is a `400 invalid_type`. `jev_client.choice()/score()` emit the right shape for
+> you (a map passed to `score()` is flattened to its ordered keys).
 
 ## Response
 
@@ -73,8 +74,9 @@ are evaluated **in parallel** in one request — batch several rather than makin
   keys; `noul_of()` handles both.)
 - **choice** → `probabilities` per option + `confidence`. **There is no `choice` field** —
   the chosen option is the argmax; `choice_of()` computes it.
-- **score** → `probabilities` over the levels + a `legend` + `confidence`; `score_of()`
-  returns the expected level index (callers normalize to 0..1).
+- **score** → a scalar `score` (expected level index, 0..len−1) + `legend` (index→label) +
+  `probabilities` (index→p) + `confidence`; `score_of()` prefers the scalar, else computes
+  the expected index. Callers normalize to 0..1 by dividing by `len−1`.
 - **usage** → real `input_tokens` and `cost`. `jev_meter` records these as measured Jev spend.
 
 ## Limits & economics (why this is loop-safe)
@@ -86,5 +88,5 @@ are evaluated **in parallel** in one request — batch several rather than makin
 At that price a Check on every tool result or a `jev_next` on every step is effectively
 free — the whole reason jeveloper can run Jev in the hot loop.
 
-Sources: OpenRouter TypeSafe/Jev Decisions API docs and model pages (`typesafe/jev-latest`,
+Sources: OpenRouter TypeSafe/Jev Decisions API docs and model pages (`~typesafe/jev-latest`,
 `typesafe/jev-1.13`), Sept 2026.

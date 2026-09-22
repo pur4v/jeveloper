@@ -41,8 +41,9 @@ _OPENROUTER_URL = "https://openrouter.ai/api/alpha/decisions"
 _TYPESAFE_URL = "https://api.typesafe.ai/v1/systemone"
 
 # name -> (endpoint, default model, default key env var)
+# OpenRouter needs the `~` prefix for the auto-latest alias; `typesafe/jev-1.13` also works.
 _PROVIDERS = {
-    "openrouter": (_OPENROUTER_URL, "typesafe/jev-latest", "OPENROUTER_API_KEY"),
+    "openrouter": (_OPENROUTER_URL, "~typesafe/jev-latest", "OPENROUTER_API_KEY"),
     "typesafe": (_TYPESAFE_URL, "jev-latest", "TYPESAFE_API_KEY"),
 }
 _ALIASES = {"direct": "typesafe", "native": "typesafe", "openrouter.ai": "openrouter"}
@@ -93,17 +94,21 @@ def choice(instructions: str, options: dict[str, str]) -> dict:
 
 
 def score(instructions: str, criteria) -> dict:
-    """Position on an ordered scale. `criteria` is the levels low->high: a list of names,
-    or a {level: description} map. Stored as a map on the wire; order is preserved."""
+    """Position on an ordered scale. `criteria` is the ordered levels low->high. The Jev
+    decisions API wants an ARRAY here (unlike choice, which takes a map), so a map is
+    flattened to its ordered keys."""
     if isinstance(criteria, dict):
-        crit = dict(criteria)
+        crit = list(criteria.keys())
     else:
-        crit = {str(c): str(c) for c in criteria}
+        crit = [str(c) for c in criteria]
     return {"type": "score", "instructions": instructions, "criteria": crit}
 
 
 def _ordered_levels(q: dict) -> list[str]:
-    return list((q.get("criteria") or {}).keys())
+    crit = q.get("criteria")
+    if isinstance(crit, dict):
+        return list(crit.keys())
+    return list(crit or [])
 
 
 # --- transport ---------------------------------------------------------------
@@ -125,7 +130,7 @@ def ask(state, questions: dict[str, dict], api_key: str | None = None,
             url, model, key = resolved
         else:  # explicit api_key with no env provider -> assume OpenRouter
             url, model, key = _OPENROUTER_URL, os.environ.get(
-                "JEVELOPER_MODEL", "typesafe/jev-latest"), api_key
+                "JEVELOPER_MODEL", "~typesafe/jev-latest"), api_key
         payload = {"model": model, "state": state, "questions": questions}
         req = urllib.request.Request(
             url,

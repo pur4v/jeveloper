@@ -9,7 +9,7 @@ Do this in order:
 
 1. **Choose the provider.** jeveloper can reach Jev two ways — ask (or infer) which:
    - **OpenRouter** — set `provider.use: "openrouter"`; key env `OPENROUTER_API_KEY`; model
-     `typesafe/jev-latest`.
+     `~typesafe/jev-latest`.
    - **Direct** (TypeSafe native) — set `provider.use: "direct"`; key env `TYPESAFE_API_KEY`;
      model `jev-latest`.
    - **Auto** (default) — OpenRouter if `OPENROUTER_API_KEY` is set, else TypeSafe.
