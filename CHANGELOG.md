@@ -7,7 +7,11 @@ All notable changes to jeveloper are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
-- **OpenRouter provider** — `jev_client` now auto-detects the provider from the environment:
+- **Selectable provider** — users can add **OpenRouter** or **direct** (TypeSafe native), by
+  config or env. `.jeveloper.json` gains a `provider` block (`use: auto|openrouter|direct`,
+  optional `model`/`api_url`/`api_key_env`); `JEVELOPER_PROVIDER` overrides it; `/jeveloper:setup`
+  records the choice + env-var name (never the key). An explicit choice never silently falls
+  back to the other provider. `jev_client` auto-detects when `use: auto`:
   `OPENROUTER_API_KEY` → OpenRouter Decisions API (`/api/alpha/decisions`, model
   `typesafe/jev-latest`), else `TYPESAFE_API_KEY` → TypeSafe native, else MOCK. Request/
   response schema pinned to OpenRouter's confirmed shape (`criteria` map for `choice`/

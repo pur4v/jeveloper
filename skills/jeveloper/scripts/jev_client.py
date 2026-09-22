@@ -40,20 +40,44 @@ TIMEOUT = float(os.environ.get("JEVELOPER_TIMEOUT", "5"))
 _OPENROUTER_URL = "https://openrouter.ai/api/alpha/decisions"
 _TYPESAFE_URL = "https://api.typesafe.ai/v1/systemone"
 
+# name -> (endpoint, default model, default key env var)
+_PROVIDERS = {
+    "openrouter": (_OPENROUTER_URL, "typesafe/jev-latest", "OPENROUTER_API_KEY"),
+    "typesafe": (_TYPESAFE_URL, "jev-latest", "TYPESAFE_API_KEY"),
+}
+_ALIASES = {"direct": "typesafe", "native": "typesafe", "openrouter.ai": "openrouter"}
+
+
+def _provider_cfg() -> dict:
+    """Read the `provider` block from .jeveloper.json (best-effort; {} if absent)."""
+    try:
+        import jev_config
+        return jev_config.load_config().get("provider", {}) or {}
+    except Exception:
+        return {}
+
 
 def _resolve():
-    """Pick provider from the environment. Returns (url, model, key) or None for MOCK."""
-    override_url = os.environ.get("JEVELOPER_API_URL")
-    override_model = os.environ.get("JEVELOPER_MODEL")
-    or_key = os.environ.get("OPENROUTER_API_KEY")
-    ts_key = os.environ.get("TYPESAFE_API_KEY")
-    if or_key:
-        return (override_url or _OPENROUTER_URL,
-                override_model or "typesafe/jev-latest", or_key)
-    if ts_key:
-        return (override_url or _TYPESAFE_URL,
-                override_model or "jev-latest", ts_key)
-    return None
+    """Pick the provider. Selection order: JEVELOPER_PROVIDER env > `.jeveloper.json`
+    provider.use > auto (OpenRouter if its key is set, else TypeSafe). Keys always come from
+    the environment — never from config. Returns (url, model, key) or None for MOCK."""
+    cfg = _provider_cfg()
+    use = (os.environ.get("JEVELOPER_PROVIDER") or cfg.get("use") or "auto").lower()
+    use = _ALIASES.get(use, use)
+    override_url = os.environ.get("JEVELOPER_API_URL") or cfg.get("api_url") or ""
+    override_model = os.environ.get("JEVELOPER_MODEL") or cfg.get("model") or ""
+    key_env = cfg.get("api_key_env") or ""
+
+    def build(name: str):
+        url, model, default_env = _PROVIDERS[name]
+        key = (os.environ.get(key_env) if key_env else None) or os.environ.get(default_env)
+        if not key:
+            return None
+        return (override_url or url, override_model or model, key)
+
+    if use in _PROVIDERS:
+        return build(use)  # explicit choice: no silent fallback to the other provider
+    return build("openrouter") or build("typesafe")  # auto
 
 
 # --- question builders -------------------------------------------------------

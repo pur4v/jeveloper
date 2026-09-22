@@ -36,6 +36,13 @@ Lives in the **project root** (the cwd Claude runs in). Written by `/jeveloper:s
   "enabled": true,
   "goal": "Ship the CSV export endpoint with tests and docs",
 
+  "provider": {
+    "use": "auto",            // auto | openrouter | direct   (direct = TypeSafe native)
+    "model": "",              // optional model-id override
+    "api_url": "",            // optional endpoint override
+    "api_key_env": ""         // optional: custom env var holding the key
+  },
+
   "route": {
     "enabled": true,
     "tools": ["Bash"],
@@ -55,6 +62,9 @@ Lives in the **project root** (the cwd Claude runs in). Written by `/jeveloper:s
 ```
 
 - `enabled` — master switch. Ships `false`. `JEVELOPER_ENABLED=1`/`0` overrides it.
+- `provider.use` — `auto` (default) / `openrouter` / `direct`. `JEVELOPER_PROVIDER` overrides
+  it. An explicit choice never silently falls back to the other provider. Keys stay in the
+  env (`api_key_env`, else the provider default).
 - `goal` — optional standing objective the Warden judges completeness against.
 - Per-reflex `enabled` lets you run, say, only Check + Warden and leave the gate off.
 - Later sources win: DEFAULTS → `.jeveloper.json` → `JEVELOPER_ENABLED` env.
@@ -66,6 +76,7 @@ Lives in the **project root** (the cwd Claude runs in). Written by `/jeveloper:s
 | `OPENROUTER_API_KEY` | Jev via OpenRouter (preferred if set). Unset + no TypeSafe key → MOCK | — |
 | `TYPESAFE_API_KEY` | Jev via TypeSafe native. Both unset → MOCK → all reflexes fail open | — |
 | `JEVELOPER_ENABLED` | master-switch override (`1`/`0`) | (config) |
+| `JEVELOPER_PROVIDER` | provider override: `auto`/`openrouter`/`direct` | (config) |
 | `JEVELOPER_API_URL` | override the Jev endpoint | provider default |
 | `JEVELOPER_MODEL` | override the model id | provider default |
 | `JEVELOPER_TIMEOUT` | request timeout, seconds | `5` |

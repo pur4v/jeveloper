@@ -98,11 +98,19 @@ Or use just the skill: copy `skills/jeveloper/` into your `.claude/skills/`.
 ## Enable (per project)
 
 ```bash
-export TYPESAFE_API_KEY=…        # from console.typesafe.ai/settings/keys
+# pick ONE provider — key stays in the env, never in a file:
+export OPENROUTER_API_KEY=sk-or-…   # Jev via OpenRouter (model typesafe/jev-latest)
+#   …or…
+export TYPESAFE_API_KEY=…           # Jev direct (TypeSafe native)
 ```
 ```
 /jeveloper:setup "optional standing goal for the Warden"
 ```
+
+`/jeveloper:setup` records the **provider choice** (`auto` / `openrouter` / `direct`) and the
+env-var *name* in `.jeveloper.json` — never the key itself — then verifies and probes it.
+Auto-detect uses OpenRouter if its key is set, else TypeSafe; force one with
+`provider.use` or `JEVELOPER_PROVIDER`.
 
 `/jeveloper:setup` writes `.jeveloper.json` (thresholds + master switch), verifies the key,
 and runs a live/mock probe. Tune anything in `.jeveloper.json` — see

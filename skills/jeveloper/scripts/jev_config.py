@@ -20,6 +20,15 @@ import sys
 DEFAULTS: dict = {
     # Master switch. Ships OFF: the plugin does nothing until you opt in.
     "enabled": False,
+    # Which Jev provider to use. "auto" = OpenRouter if OPENROUTER_API_KEY is set, else
+    # TypeSafe native. Force one with "openrouter" or "direct" (aka "typesafe"). The key is
+    # ALWAYS read from the environment (api_key_env names the var) — never stored here.
+    "provider": {
+        "use": "auto",          # auto | openrouter | direct
+        "model": "",            # optional model-id override
+        "api_url": "",          # optional endpoint override
+        "api_key_env": "",      # optional: custom env var holding the key
+    },
     # A standing objective the warden judges "done-ness" against. Optional; when
     # empty the warden falls back to the transcript's own most recent user request.
     "goal": "",

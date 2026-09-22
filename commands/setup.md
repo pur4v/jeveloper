@@ -7,17 +7,24 @@ Set up **jeveloper** in the current project. Any argument is the standing `goal`
 
 Do this in order:
 
-1. **Check the key.** Confirm `OPENROUTER_API_KEY` (preferred) or `TYPESAFE_API_KEY` is set
-   in the environment. If neither is, tell the user jeveloper will run in inert MOCK mode
-   (all reflexes fail open) until they set one — `OPENROUTER_API_KEY` (Jev via OpenRouter,
-   model `typesafe/jev-latest`) or `TYPESAFE_API_KEY` (native) — then continue setup anyway
-   (a keyless install is valid and safe). Never echo the key.
+1. **Choose the provider.** jeveloper can reach Jev two ways — ask (or infer) which:
+   - **OpenRouter** — set `provider.use: "openrouter"`; key env `OPENROUTER_API_KEY`; model
+     `typesafe/jev-latest`.
+   - **Direct** (TypeSafe native) — set `provider.use: "direct"`; key env `TYPESAFE_API_KEY`;
+     model `jev-latest`.
+   - **Auto** (default) — OpenRouter if `OPENROUTER_API_KEY` is set, else TypeSafe.
+
+   Then check that the chosen provider's key is present in the environment. If not, tell the
+   user jeveloper runs in inert MOCK mode until they `export` it (or a custom var named in
+   `provider.api_key_env`), and continue setup anyway. **Never echo, store, or commit the
+   key** — it lives only in the environment; `.jeveloper.json` records only the provider
+   *choice* and the env-var *name*.
 
 2. **Write `.jeveloper.json`** in the project root using the schema in
-   `skills/jeveloper/reference/hooks.md`. Set `enabled: true`, set `goal` to the argument
-   if one was given (else leave `""`), and keep the default thresholds unless the user
-   asked otherwise. Do NOT overwrite an existing `.jeveloper.json` without showing the diff
-   and confirming.
+   `skills/jeveloper/reference/hooks.md`. Set `enabled: true`, set the `provider` block from
+   step 1, set `goal` to the argument if one was given (else `""`), and keep the default
+   thresholds unless the user asked otherwise. Do NOT overwrite an existing `.jeveloper.json`
+   without showing the diff and confirming.
 
 3. **Probe.** Run the client smoke test and report whether it came back live or mock:
 
