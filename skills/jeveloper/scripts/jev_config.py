@@ -36,6 +36,11 @@ DEFAULTS: dict = {
     "goal": "",
     # Jev drives every turn — the always-on ping-pong, injected by the UserPromptSubmit hook.
     "drive": {"enabled": True},
+    # Deep-reasoning mode: OFF by default (fast, token-thrifty reflex picks are the default).
+    # When on, the driver flips to thorough reasoning + Jev LOOKAHEAD (search/tree) for each
+    # decision — rigour over thrift, for hard / high-stakes / ambiguous work. Toggle here or
+    # with JEVELOPER_DEEP=1.
+    "deep": {"enabled": False},
     "route": {
         "enabled": True,
         # Which tools the gate applies to. Empty list = gate EVERYTHING the hook receives

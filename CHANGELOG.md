@@ -55,6 +55,13 @@ All notable changes to jeveloper are documented here. The format is based on
   terminal automatically, since the hook refreshes it each turn — no `export` needed.
 
 ### Added
+- **Deep reasoning mode (`/jeveloper:deep`, `deep.enabled` / `JEVELOPER_DEEP`).** An opt-in
+  escape hatch that trades token-thrift for rigour: instead of a fast one-shot `jev_path` pick,
+  Claude reasons the problem through and Jev evaluates the whole decision tree with **lookahead**
+  (`jev_search` beam + depth, or `jev_tree`), backing up the value so the chosen path is the best
+  *outcome*, not the one that only looks best now. Off by default (fast path stays the default);
+  turn on per project for hard/high-stakes/ambiguous work. The UserPromptSubmit driver injects
+  the deep instruction when enabled.
 - **Colour-coded Jev output (`jev_color.py`).** Jev's lines are now cyan and tagged `⟦Jev⟧`,
   mock/advisory is yellow, and errors are red — so a user can tell Jev's output from Claude's
   prose (default colour) and from errors at a glance. The CLIs print a coloured `⟦Jev⟧` banner

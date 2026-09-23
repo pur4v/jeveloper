@@ -114,6 +114,22 @@ verify-block costs a turn, and the token saving is an **estimate** until benchma
 real key. It wins on **decision-heavy, well-scoped** work. See
 [`skills/jeveloper/reference/mode-drive.md`](skills/jeveloper/reference/mode-drive.md).
 
+## Deep reasoning mode 🧠
+
+Driver mode above optimises for *thrift* — a fast reflex pick, minimal deliberation. When a
+decision is hard, high-stakes, or ambiguous, flip it: **deep reasoning mode** trades tokens for
+rigour. Instead of a one-shot `jev_path` pick, Claude reasons the problem through and Jev
+evaluates the whole decision tree with **lookahead** — proposing candidate paths *and* their
+likely follow-ons, scoring each level in one batched call, and backing the value up so the
+chosen path is the best *outcome*, not the option that merely looks best right now.
+
+- **One-off:** `/jeveloper:deep <the hard decision>`
+- **Always-on for a project:** `"deep": {"enabled": true}` in `.jeveloper.json` (or `JEVELOPER_DEEP=1`)
+
+Off by default — the fast, token-saving path stays the default; deep mode is the escape hatch
+for the decisions that deserve it. Built on `/jeveloper:search` (beam + lookahead) and
+`/jeveloper:tree` (composed sub-decisions).
+
 ## One idea: Jev is the judge
 
 Every capability is the same move — put something in front of Jev and act on its verdict.
@@ -195,6 +211,7 @@ can write this for you, but it's optional.
 | `/jeveloper:path` | throw candidate paths → Jev scores each → best returned as a "DO NEXT" directive |
 | `/jeveloper:fanout` | spawn one real subagent per approach (native tree) → Jev adjudicates the winner |
 | `/jeveloper:drive` | run the Jev-driven loop — Jev decides → you execute → Jev verifies → repeat |
+| `/jeveloper:deep` | **deep reasoning** — think it through + Jev lookahead (search/tree) instead of a fast pick |
 | `/jeveloper:doctor` | health check — live vs MOCK per reflex, with the exact fix for each problem |
 | `/jeveloper:stats` | decisions offloaded to Jev + estimated thinking-tokens saved |
 | `/jeveloper:demo` | run a few live Jev decisions and show the measured cost |

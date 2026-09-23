@@ -32,6 +32,8 @@ _FANOUT_RE = re.compile(
 _SCRIPTS = os.path.dirname(os.path.abspath(__file__))
 _NEXT = os.path.join(_SCRIPTS, "jev_next.py")
 _PATH = os.path.join(_SCRIPTS, "jev_path.py")
+_SEARCH = os.path.join(_SCRIPTS, "jev_search.py")
+_TREE = os.path.join(_SCRIPTS, "jev_tree.py")
 
 INSTRUCTION = f"""[jeveloper driver mode — active this session]
 Jev is the judge that drives. For any actionable task, do NOT deliberate at length — defer
@@ -66,6 +68,20 @@ Do this automatically, without the user asking or typing a command:
   every future terminal). Never store a key without asking.
 For pure questions/explanations (no actions to take), answer normally."""
 
+DEEP_INSTRUCTION = f"""[jeveloper — DEEP REASONING mode active]
+This project wants rigour over token-thrift. For any non-trivial decision, do NOT shortcut to a
+fast pick — think it through, and let Jev evaluate with LOOKAHEAD:
+1. Reason through the problem first; state the real trade-offs.
+2. Enumerate candidate paths AND their likely follow-ons (including the worst case), then
+   evaluate the whole tree — not a one-shot score:
+     python3 "{_SEARCH}" <spec.json> "<state>" [beam] [depth]     # beam + lookahead over options
+     python3 "{_TREE}"   <spec.json> "<state or JSON>"            # compose many sub-decisions
+   (Use {_PATH}/{_NEXT} only for genuinely trivial either/or picks.)
+3. Act on the backed-up best OUTCOME — the option that wins after lookahead, not the one that
+   merely looks best now. The Check hook still verifies. Prefer correctness over saving tokens.
+When you report a Jev-derived result, prefix that line with ⟦Jev⟧.
+For pure questions/explanations (no actions to take), answer normally."""
+
 FANOUT_DIRECTIVE = """[jeveloper — FAN OUT REQUIRED for this prompt]
 This request explores/compares multiple approaches, so it is NOT a "just answer it" turn. You
 MUST, before writing any recommendation:
@@ -86,9 +102,12 @@ def main() -> None:
     cfg_mod.reset_consulted()  # new turn: Jev not yet consulted (the gate re-arms)
     data = cfg_mod.read_hook_input()
     prompt = str(data.get("prompt", "") or "")
-    context = INSTRUCTION
+    deep = (cfg_mod.mode_enabled(cfg, "deep")
+            or os.environ.get("JEVELOPER_DEEP") not in (None, "", "0", "false", "False"))
+    base = DEEP_INSTRUCTION if deep else INSTRUCTION
+    context = base
     if _FANOUT_RE.search(prompt):
-        context = FANOUT_DIRECTIVE + "\n\n" + INSTRUCTION
+        context = FANOUT_DIRECTIVE + "\n\n" + base
     cfg_mod.emit({
         "hookSpecificOutput": {
             "hookEventName": "UserPromptSubmit",
