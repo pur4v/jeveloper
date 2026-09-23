@@ -51,13 +51,12 @@ All notable changes to jeveloper are documented here. The format is based on
   just the assistant's answer, so Jev scores it low and the warden held the stop. The warden
   now releases any question objective unconditionally; it exists to catch unfinished *work*,
   and a question is answered in the reply, not verified in the transcript.
-- **Warden: high-completeness escape.** The stop was gated on completeness AND a `met`
-  "everything verified in recent activity" check — but `met` reads systematically low for
-  text/advice deliverables (nothing to verify in the transcript), so a task Jev scored 9+/10
-  complete could still be blocked. A completeness at/above `sure_threshold` (default 9.0) now
-  releases regardless of `met`; the `met` gate still applies in the middle band (7.0–9.0),
-  where completeness alone is less trustworthy. Since "done AND verified" is the top rung,
-  genuinely unverified code can't reach 9 and is still held.
+- **Warden: gate on completeness alone.** The stop was gated on completeness AND a `met`
+  "everything verified in recent activity" check, but `met` reads systematically low for
+  text/advice turns that have nothing to verify — repeatedly holding finished work. The `met`
+  hard-veto is dropped: the stop is allowed once completeness ≥ `done_threshold`. Completeness
+  already encodes verification (top rung is "done AND verified"), so genuinely unfinished work
+  scores below the threshold and is still held; `met` now only colours the reason line.
 
 ### Added
 - **Fan-out mode (`/jeveloper:fanout`).** Explore several directions for the *same* task by

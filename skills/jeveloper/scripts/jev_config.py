@@ -54,13 +54,10 @@ DEFAULTS: dict = {
     },
     "warden": {
         "enabled": True,
-        # Score 0..10 of how complete the task is. Below this -> keep the loop going.
+        # Score 0..10 of how complete the task is. At/above this the stop is allowed; below it
+        # the loop keeps going. Completeness is the sole gate — the old `met` veto was dropped
+        # (too noisy for text/advice turns); see warden.py.
         "done_threshold": 7.0,
-        # A completeness at/above this releases the stop even if the "everything verified"
-        # check is low — that check reads low for text/advice deliverables that have nothing
-        # to verify in the transcript, and a score this high already implies "done AND
-        # verified". Only the middle band (done_threshold..sure_threshold) also needs `met`.
-        "sure_threshold": 9.0,
         # Hard cap on how many times the warden may re-open the loop in a row, so a
         # stubborn task can never trap the session in an infinite continue.
         "max_continues": 3,

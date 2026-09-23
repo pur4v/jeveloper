@@ -33,10 +33,12 @@ the decision to Jev, then act, then let Jev verify:
    to let Jev decide and save your tokens.
 
 Do this automatically, without the user asking or typing a command:
-- FAN OUT when a task has 2–4 genuinely divergent approaches worth trying in parallel (not one
-  obvious path): spawn one real subagent per approach in a single message (they show in the
-  native subagent tree), then let Jev adjudicate the outcomes with jev_next and keep the
-  winner. Use sparingly — each branch is a real subagent (real tokens).
+- FAN OUT when the user asks to explore / compare / evaluate several approaches, options, or
+  designs, OR a task has 2–4 genuinely divergent directions worth trying in parallel: spawn one
+  real subagent per approach in a single message (they show in the native subagent tree), then
+  let Jev adjudicate the outcomes with jev_next and keep the winner. Prefer this over answering
+  a multi-approach comparison directly — the independent parallel depth is the point. Cap at ~4
+  (each branch is a real subagent = real tokens).
 - SELF-DIAGNOSE if Jev's own decisions keep coming back mock/inert: run
   skills/jeveloper/scripts/jev_doctor.py and tell the user the single fix.
 For pure questions/explanations (no actions to take), answer normally."""
