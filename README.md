@@ -23,6 +23,26 @@ automatically in the agent loop so the slow reasoner spends its effort on the wo
 of on second-guessing every step: *is this command safe? did that test really pass? are we
 actually done?*
 
+### Why — and how it saves you money 💸
+
+Claude's most expensive tokens are the ones it burns **deliberating** — *is this safe? did that
+pass? which approach? are we done?* Those are cheap, structured, repeatable judgements — exactly
+Jev's shape (~100× cheaper, ~100 ms, typed, never prose). jeveloper routes each of them to Jev so
+Claude **reasons less and executes more**:
+
+- **Offload the deciding.** Claude throws candidate paths; Jev scores each and hands back the
+  best as a "DO NEXT" directive Claude just runs — instead of Claude spending reasoning tokens
+  choosing (`jev_path` / `jev_next`).
+- **Enforced, not optional.** The first action of each turn is blocked until Jev has actually
+  been consulted, so the decision is genuinely offloaded — not skipped when Claude feels rushed.
+- **Catch failures instantly** — a skipped-but-green test, a wrong edit, a buried error — so
+  Claude never reasons on top of a broken state.
+- **Stop when the work is truly done**, not on a hunch — no extra "just checking" turns.
+
+Every Jev call is **metered**, so the saving is *reported* by `/jeveloper:stats`, not asserted.
+It wins most on decision-heavy, well-scoped work; generation itself can't be offloaded (Jev
+decides — it doesn't write code).
+
 ---
 
 ## Quickstart
@@ -45,10 +65,18 @@ load (a plugin's hooks only register at startup).
 **That's it.** With a key set, jeveloper runs the whole loop through Jev, automatically, on
 every turn — no command, no config:
 
-- **Jev decides** each next action (it's the first call, before Claude acts),
+- **Jev decides** each next action — Claude throws candidate paths, Jev scores them and returns
+  the best as a directive (`jev_path`); the turn's first action is **blocked until Jev is
+  consulted**, so the deciding is really offloaded,
 - **Jev gates** every tool call (can deny/ask on something destructive),
-- **Jev verifies** every tool's output, and
-- **Jev holds the loop open** until the work is genuinely done.
+- **Jev verifies** every tool's output,
+- **Jev holds the loop open** until the work is genuinely done, and
+- **Jev fans out** — a "compare N approaches" prompt spawns one real subagent per approach (in
+  the native subagent tree) and Jev adjudicates the winner.
+
+Jev's own output is **colour-coded** (cyan `⟦Jev⟧`, yellow for mock, red for errors) so you can
+tell Jev from Claude at a glance. No key found? Jev asks you for one and — with your permission —
+stores it so it's live in every terminal (`/jeveloper:doctor` to check status).
 
 - **See it work in one command:** `bash demo.sh` (or `/jeveloper:demo`)
 - **What did it cost:** `/jeveloper:stats`
@@ -164,7 +192,10 @@ can write this for you, but it's optional.
 | `/jeveloper:ask` | any raw typed question — `noul` / `choice` / `score` |
 | `/jeveloper:tree` | compose many sub-decisions into one — branched + recursively reduced |
 | `/jeveloper:search` | search candidate *options* with Jev as the judge — beam + lookahead |
+| `/jeveloper:path` | throw candidate paths → Jev scores each → best returned as a "DO NEXT" directive |
+| `/jeveloper:fanout` | spawn one real subagent per approach (native tree) → Jev adjudicates the winner |
 | `/jeveloper:drive` | run the Jev-driven loop — Jev decides → you execute → Jev verifies → repeat |
+| `/jeveloper:doctor` | health check — live vs MOCK per reflex, with the exact fix for each problem |
 | `/jeveloper:stats` | decisions offloaded to Jev + estimated thinking-tokens saved |
 | `/jeveloper:demo` | run a few live Jev decisions and show the measured cost |
 
