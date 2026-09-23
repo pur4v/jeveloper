@@ -72,12 +72,17 @@ def report(path: str | None = None) -> dict:
                 totals["jev_cost_usd"] += float(r.get("cost", 0.0) or 0.0)
                 totals["jev_input_tokens"] += int(r.get("input_tokens", 0) or 0)
                 k = r.get("kind", "ask")
-                totals["by_kind"][k] = totals["by_kind"].get(k, 0) + r.get("calls", 1)
+                bk = totals["by_kind"].setdefault(
+                    k, {"calls": 0, "decisions": 0, "live_calls": 0, "cost": 0.0})
+                bk["calls"] += r.get("calls", 1)
+                bk["decisions"] += r.get("decisions", 0)
                 if r.get("mock"):
                     totals["mock_calls"] += r.get("calls", 1)
                 else:
                     totals["live_calls"] += r.get("calls", 1)
                     totals["live_decisions"] += r.get("decisions", 0)
+                    bk["live_calls"] += r.get("calls", 1)
+                    bk["cost"] += float(r.get("cost", 0.0) or 0.0)
     except OSError:
         pass
     totals["tokens_per_decision"] = tpd
@@ -90,7 +95,18 @@ def format_report(totals: dict) -> str:
         "jeveloper — Jev decision meter",
         f"  Jev calls:            {totals['calls']}  (live {totals['live_calls']}, mock {totals['mock_calls']})",
         f"  decisions offloaded:  {totals['decisions']}  (live {totals['live_decisions']})",
-        "  by kind:              " + (", ".join(f"{k}={v}" for k, v in sorted(totals["by_kind"].items())) or "—"),
+        "  by kind:",
+    ]
+    by_kind = totals.get("by_kind") or {}
+    if by_kind:
+        for k in sorted(by_kind, key=lambda x: (-by_kind[x]["calls"], x)):
+            v = by_kind[k]
+            lines.append(
+                f"      {k:8} {v['calls']:>4} calls, {v['decisions']:>4} decisions, "
+                f"live {v['live_calls']:>4}, ${v['cost']:.6f}")
+    else:
+        lines.append("      —")
+    lines += [
         f"  Jev spend (real):     ${totals['jev_cost_usd']:.6f}  ({totals['jev_input_tokens']:,} input tokens)",
         f"  est. thinking tokens saved: ~{totals['est_thinking_tokens_saved']:,}"
         f"  (estimate: {int(totals['tokens_per_decision'])} tok/decision × {totals['live_decisions']} live decisions)",

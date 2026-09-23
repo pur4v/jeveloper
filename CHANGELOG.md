@@ -60,6 +60,10 @@ All notable changes to jeveloper are documented here. The format is based on
   since hook registration is read once at startup. (An inline end-of-turn *summary* line isn't
   possible: a `Stop` hook has no user-visible message channel; only `terminalSequence`
   bell/notification is available there.)
+- **Per-kind Jev meter.** The route, check, and warden hooks now tag their Jev calls with a
+  `kind` (`route`/`check`/`warden`) instead of the default `ask`, so the meter and
+  `/jeveloper:stats` break down calls, decisions, live calls, and real spend **per kind**
+  rather than lumping everything together.
 - **`demo.sh` / `/jeveloper:demo`** — run a few real Jev decisions (skipped-test check, model
   routing, next-action pick, an auto-merge tree) and print the measured cost, in one command.
 - **Selectable provider** — users can add **OpenRouter** or **direct** (TypeSafe native), by

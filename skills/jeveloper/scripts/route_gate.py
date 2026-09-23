@@ -56,6 +56,7 @@ def main() -> None:
                 "This action is unrelated to, or works against, the stated project goal."
             ),
         },
+        kind="route",
     )
     if result.get("mock"):
         cfg_mod.fail_open("mock/keyless — no opinion")

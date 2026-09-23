@@ -58,6 +58,7 @@ def main() -> None:
                 "to do."
             ),
         },
+        kind="check",
     )
     if result.get("mock"):
         cfg_mod.fail_open("mock/keyless — no opinion")

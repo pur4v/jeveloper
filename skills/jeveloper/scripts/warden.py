@@ -198,6 +198,7 @@ def main() -> None:
                 "on its own would not help."
             ),
         },
+        kind="warden",
     )
     if result.get("mock"):
         cfg_mod.fail_open("mock/keyless — no opinion")
