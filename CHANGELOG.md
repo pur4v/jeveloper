@@ -47,10 +47,10 @@ All notable changes to jeveloper are documented here. The format is based on
   `<task-notification>`, `<tool-use-id>`, `</note>`, `Stop hook feedback:`) when choosing the
   objective, and treats such content as trivial if it ever slips through.
 - **Warden no longer blocks answered questions.** For a pure question objective (ends with
-  "?"), the "every acceptance criterion verified in recent activity" test never fits, so a
-  fully answered question stayed stuck below the `met` threshold. Questions now release on
-  completeness alone (once `score >= done_threshold`), matching the driver rule that pure
-  questions are answered, not "verified".
+  "?"), the "completeness of the work shown" model doesn't fit — there is no work to grade,
+  just the assistant's answer, so Jev scores it low and the warden held the stop. The warden
+  now releases any question objective unconditionally; it exists to catch unfinished *work*,
+  and a question is answered in the reply, not verified in the transcript.
 
 ### Added
 - **Fan-out mode (`/jeveloper:fanout`).** Explore several directions for the *same* task by
@@ -59,6 +59,14 @@ All notable changes to jeveloper are documented here. The format is based on
   Complements the Jev-only `search`/`tree` (which score text options without executing them);
   fan-out actually runs each branch. Real subagents = real tokens, so it's for genuinely
   divergent directions worth the cost.
+- **Zero-command by default.** The always-on driver now triggers fan-out and self-diagnosis on
+  its own — no need to type `/jeveloper:fanout` or `/jeveloper:doctor`. It fans out to parallel
+  subagents when a task has genuinely divergent approaches, and runs the doctor when its own
+  decisions keep coming back mock/inert. The commands remain for explicit use.
+- **Health check (`/jeveloper:doctor`, `jev_doctor.py`).** One shot: master switch, key
+  detection, a real live probe, each reflex's on/off + live/MOCK state, config-file validity,
+  and hook registration — with the exact fix for every red line. Targets jeveloper's biggest
+  hazard: a mistyped key or unregistered hook silently making the whole plugin do nothing.
 - **Live Jev status spinners.** Each Jev hook now sets `statusMessage`, so Claude Code shows a
   labelled spinner while the call runs — `⚡ Jev checking this action…` (route),
   `⚡ Jev verifying the result…` (check), `⚡ Jev judging if the task is done…` (warden) — making

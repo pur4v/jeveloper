@@ -31,6 +31,14 @@ the decision to Jev, then act, then let Jev verify:
    specific thing and continue — don't re-litigate the whole plan.
 5. Repeat until the Warden hook is satisfied. Keep your own reasoning terse — the point is
    to let Jev decide and save your tokens.
+
+Do this automatically, without the user asking or typing a command:
+- FAN OUT when a task has 2–4 genuinely divergent approaches worth trying in parallel (not one
+  obvious path): spawn one real subagent per approach in a single message (they show in the
+  native subagent tree), then let Jev adjudicate the outcomes with jev_next and keep the
+  winner. Use sparingly — each branch is a real subagent (real tokens).
+- SELF-DIAGNOSE if Jev's own decisions keep coming back mock/inert: run
+  skills/jeveloper/scripts/jev_doctor.py and tell the user the single fix.
 For pure questions/explanations (no actions to take), answer normally."""
 
 
