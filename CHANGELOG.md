@@ -53,6 +53,12 @@ All notable changes to jeveloper are documented here. The format is based on
   questions are answered, not "verified".
 
 ### Added
+- **Fan-out mode (`/jeveloper:fanout`).** Explore several directions for the *same* task by
+  spawning one **real subagent per branch** — so Claude Code's native subagent tree shows them
+  running in parallel — then let **Jev adjudicate** the returned outcomes and pick the winner.
+  Complements the Jev-only `search`/`tree` (which score text options without executing them);
+  fan-out actually runs each branch. Real subagents = real tokens, so it's for genuinely
+  divergent directions worth the cost.
 - **Live Jev status spinners.** Each Jev hook now sets `statusMessage`, so Claude Code shows a
   labelled spinner while the call runs — `⚡ Jev checking this action…` (route),
   `⚡ Jev verifying the result…` (check), `⚡ Jev judging if the task is done…` (warden) — making
