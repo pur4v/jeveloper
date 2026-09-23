@@ -220,12 +220,17 @@ def main() -> None:
         _reset_counter(counter_path)
         cfg_mod.fail_open(f"agent looks blocked (p={blocked:.2f}) — letting it stop")
 
-    # A pure question is "done" when it's answered well; completeness captures that, and the
-    # "every criterion verified" test doesn't fit an answer-only turn, so don't require `met`.
-    is_question = objective.strip().endswith("?")
-    if score >= done_threshold and (met >= 0.5 or is_question):
+    # A pure question is answered in the assistant's reply, which this "completeness of the
+    # work shown" model doesn't grade well (there is no work, just an answer). Never hold a
+    # question open — releasing it is the right call; the warden is for unfinished *work*.
+    if objective.strip().endswith("?"):
         _reset_counter(counter_path)
-        cfg_mod.fail_open(f"done (score={score:.1f}, met={met:.2f}, question={is_question})")
+        cfg_mod.fail_open(f"question objective — answered, not graded (score={score:.1f})")
+        return
+
+    if score >= done_threshold and met >= 0.5:
+        _reset_counter(counter_path)
+        cfg_mod.fail_open(f"done (score={score:.1f}, met={met:.2f})")
         return
 
     _write_counter(counter_path, continues + 1)
