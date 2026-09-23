@@ -13,11 +13,9 @@ Config resolution (later wins):
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import sys
-import tempfile
 
 DEFAULTS: dict = {
     # Master switch. "auto" (default) = ON whenever a Jev key is in the environment, OFF
@@ -52,7 +50,7 @@ DEFAULTS: dict = {
         # Claude commits expensive reasoning to an action. Only enforced while `drive` is on
         # (drive resets the per-turn marker). Set false to disable the enforcement.
         "consult_first": True,
-        "consult_tools": ["Edit", "Write", "MultiEdit", "NotebookEdit"],
+        "consult_tools": ["Edit", "Write", "MultiEdit", "NotebookEdit", "Bash", "Task"],
     },
     "check": {
         "enabled": True,
@@ -116,20 +114,24 @@ def mode_enabled(cfg: dict, mode: str) -> bool:
 
 
 def consult_marker_path() -> str:
-    """Per-project marker that records whether Jev has been consulted in the current turn.
+    """Per-project marker recording whether Jev has been consulted in the current turn.
 
-    Keyed by cwd (not session id) so the three participants share it: the UserPromptSubmit
-    hook, the PreToolUse gate, and the `jev_next`/`jev_ask` CLI Claude runs — all execute with
-    the project root as cwd, but only the hooks get a session id on stdin.
+    Lives under the project's .jeveloper/ dir (keyed by cwd, like the metrics log) — NOT the
+    temp dir: the Bash sandbox and the hook processes run with different TMPDIRs, so a
+    tmp-based marker written by the Bash `jev_next` CLI is invisible to the gate hook. They
+    do share the same cwd (that's how the meter works across both), so the project dir is the
+    reliable common ground for the driver hook, the PreToolUse gate, and the jev_next/jev_ask
+    CLI Claude runs.
     """
-    key = hashlib.sha1(os.getcwd().encode("utf-8", "replace")).hexdigest()[:12]
-    return os.path.join(tempfile.gettempdir(), f"jeveloper-consult-{key}.turn")
+    return os.path.join(os.getcwd(), ".jeveloper", "consult.turn")
 
 
 def mark_consulted() -> None:
     """Record that Jev was consulted this turn (best-effort; never raises)."""
     try:
-        with open(consult_marker_path(), "w", encoding="utf-8") as fh:
+        path = consult_marker_path()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
             fh.write("1")
     except OSError:
         pass

@@ -61,13 +61,15 @@ All notable changes to jeveloper are documented here. The format is based on
 ### Added
 - **Jev-first gate (enforced offloading).** To actually offload deliberation to Jev instead of
   relying on Claude to volunteer, the PreToolUse gate now **blocks the first substantive action
-  of each turn** (`Edit`/`Write`/`MultiEdit`/`NotebookEdit` by default) until Jev has been
-  consulted — i.e. `jev_next`/`jev_ask` has run this turn. Claude sees the deny reason, runs
-  `jev_next` to pick the action, then retries; no user prompt, no explicit command. A per-turn
-  marker (keyed by project dir, shared by the driver hook, the gate, and the `jev_next`/`jev_ask`
-  CLI) is re-armed each turn by the UserPromptSubmit hook. Enforced only while `drive` is on;
-  tune with `route.consult_first` (default true) and `route.consult_tools`. This costs no extra
-  Jev call itself — it just makes the decision-consult mandatory before acting.
+  of each turn** — `Edit`, `Write`, `MultiEdit`, `NotebookEdit`, `Bash`, and `Task` by default —
+  until Jev has been consulted (`jev_next`/`jev_ask` has run this turn). Claude sees the deny
+  reason, runs `jev_next` to pick the action, then retries; no user prompt, no explicit command.
+  Read-only tools (Read/Grep/Glob) are never gated, and the `jev_next`/`jev_ask` consult command
+  itself is exempt so it can't deadlock its own gate. The per-turn marker lives under
+  `<project>/.jeveloper/consult.turn` (cwd-based, like the metrics log — NOT the temp dir, since
+  the Bash sandbox and hook processes see different TMPDIRs) and is re-armed each turn by the
+  UserPromptSubmit hook. Enforced only while `drive` is on; tune with `route.consult_first`
+  (default true) and `route.consult_tools`. Costs no extra Jev call itself.
 - **Fan-out mode (`/jeveloper:fanout`).** Explore several directions for the *same* task by
   spawning one **real subagent per branch** — so Claude Code's native subagent tree shows them
   running in parallel — then let **Jev adjudicate** the returned outcomes and pick the winner.

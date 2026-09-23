@@ -23,6 +23,15 @@ import jev_client as jc  # noqa: E402
 import jev_config as cfg_mod  # noqa: E402
 
 
+def _is_consult_command(tool: str, tool_input: dict) -> bool:
+    """The consult itself runs jev_next/jev_ask via Bash — never gate that, or the Jev-first
+    rule deadlocks (you couldn't consult Jev because the consult command is blocked)."""
+    if tool != "Bash":
+        return False
+    cmd = (tool_input or {}).get("command", "") or ""
+    return "jev_next" in cmd or "jev_ask" in cmd
+
+
 def main() -> None:
     data = cfg_mod.read_hook_input()
     cfg = cfg_mod.load_config()
@@ -35,15 +44,19 @@ def main() -> None:
     if tools and tool not in tools:
         cfg_mod.fail_open(f"{tool} not in route.tools")
 
+    tool_input = data.get("tool_input", {})
+
     # Jev-first: block the first substantive action of the turn until Jev has actually been
     # consulted (jev_next / jev_ask has run this turn), so the *decision* is offloaded to Jev
     # before Claude commits reasoning to an action. Only enforced while `drive` is on, since
     # the UserPromptSubmit hook re-arms the per-turn marker each turn. Claude sees the deny
     # reason, runs jev_next, then retries — no user prompt. This costs no Jev call itself.
+    # The consult itself runs jev_next/jev_ask via Bash, so that command is never gated.
     consult_tools = route_cfg.get("consult_tools") or []
     if (route_cfg.get("consult_first")
             and cfg_mod.mode_enabled(cfg, "drive")
             and tool in consult_tools
+            and not _is_consult_command(tool, tool_input)
             and not cfg_mod.was_consulted()):
         cfg_mod.emit(
             {
@@ -63,7 +76,6 @@ def main() -> None:
         )
         sys.exit(0)
 
-    tool_input = data.get("tool_input", {})
     goal = cfg.get("goal", "")
 
     # State handed to Jev: the concrete action, plus the standing goal if configured.
