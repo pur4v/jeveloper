@@ -24,6 +24,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import jev_client as jc  # noqa: E402
+import jev_config as cfg_mod  # noqa: E402
 
 
 def main(argv: list[str]) -> int:
@@ -53,6 +54,7 @@ def main(argv: list[str]) -> int:
         sys.stderr.write(f"unknown question type: {qtype}\n")
         return 2
 
+    cfg_mod.mark_consulted()  # Jev is being consulted this turn -> re-arms the Jev-first gate
     result = jc.ask(state, {"answer": question})
     print(json.dumps(result, indent=2))
     return 0

@@ -13,9 +13,11 @@ Config resolution (later wins):
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
+import tempfile
 
 DEFAULTS: dict = {
     # Master switch. "auto" (default) = ON whenever a Jev key is in the environment, OFF
@@ -45,6 +47,12 @@ DEFAULTS: dict = {
         # P(unsafe) at/above this -> deny; at/above ask_threshold -> ask; else allow.
         "deny_threshold": 0.85,
         "ask_threshold": 0.60,
+        # Jev-first: block the first substantive action of a turn until Jev has been consulted
+        # (jev_next / jev_ask has run this turn), so the decision is offloaded to Jev before
+        # Claude commits expensive reasoning to an action. Only enforced while `drive` is on
+        # (drive resets the per-turn marker). Set false to disable the enforcement.
+        "consult_first": True,
+        "consult_tools": ["Edit", "Write", "MultiEdit", "NotebookEdit"],
     },
     "check": {
         "enabled": True,
@@ -105,6 +113,38 @@ def _key_present(cfg: dict) -> bool:
 
 def mode_enabled(cfg: dict, mode: str) -> bool:
     return bool(cfg.get("enabled")) and bool(cfg.get(mode, {}).get("enabled"))
+
+
+def consult_marker_path() -> str:
+    """Per-project marker that records whether Jev has been consulted in the current turn.
+
+    Keyed by cwd (not session id) so the three participants share it: the UserPromptSubmit
+    hook, the PreToolUse gate, and the `jev_next`/`jev_ask` CLI Claude runs — all execute with
+    the project root as cwd, but only the hooks get a session id on stdin.
+    """
+    key = hashlib.sha1(os.getcwd().encode("utf-8", "replace")).hexdigest()[:12]
+    return os.path.join(tempfile.gettempdir(), f"jeveloper-consult-{key}.turn")
+
+
+def mark_consulted() -> None:
+    """Record that Jev was consulted this turn (best-effort; never raises)."""
+    try:
+        with open(consult_marker_path(), "w", encoding="utf-8") as fh:
+            fh.write("1")
+    except OSError:
+        pass
+
+
+def reset_consulted() -> None:
+    """Clear the per-turn consulted marker (best-effort; never raises)."""
+    try:
+        os.remove(consult_marker_path())
+    except OSError:
+        pass
+
+
+def was_consulted() -> bool:
+    return os.path.exists(consult_marker_path())
 
 
 def read_hook_input() -> dict:

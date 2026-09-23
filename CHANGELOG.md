@@ -59,6 +59,15 @@ All notable changes to jeveloper are documented here. The format is based on
   scores below the threshold and is still held; `met` now only colours the reason line.
 
 ### Added
+- **Jev-first gate (enforced offloading).** To actually offload deliberation to Jev instead of
+  relying on Claude to volunteer, the PreToolUse gate now **blocks the first substantive action
+  of each turn** (`Edit`/`Write`/`MultiEdit`/`NotebookEdit` by default) until Jev has been
+  consulted — i.e. `jev_next`/`jev_ask` has run this turn. Claude sees the deny reason, runs
+  `jev_next` to pick the action, then retries; no user prompt, no explicit command. A per-turn
+  marker (keyed by project dir, shared by the driver hook, the gate, and the `jev_next`/`jev_ask`
+  CLI) is re-armed each turn by the UserPromptSubmit hook. Enforced only while `drive` is on;
+  tune with `route.consult_first` (default true) and `route.consult_tools`. This costs no extra
+  Jev call itself — it just makes the decision-consult mandatory before acting.
 - **Fan-out mode (`/jeveloper:fanout`).** Explore several directions for the *same* task by
   spawning one **real subagent per branch** — so Claude Code's native subagent tree shows them
   running in parallel — then let **Jev adjudicate** the returned outcomes and pick the winner.

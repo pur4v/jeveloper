@@ -35,6 +35,34 @@ def main() -> None:
     if tools and tool not in tools:
         cfg_mod.fail_open(f"{tool} not in route.tools")
 
+    # Jev-first: block the first substantive action of the turn until Jev has actually been
+    # consulted (jev_next / jev_ask has run this turn), so the *decision* is offloaded to Jev
+    # before Claude commits reasoning to an action. Only enforced while `drive` is on, since
+    # the UserPromptSubmit hook re-arms the per-turn marker each turn. Claude sees the deny
+    # reason, runs jev_next, then retries — no user prompt. This costs no Jev call itself.
+    consult_tools = route_cfg.get("consult_tools") or []
+    if (route_cfg.get("consult_first")
+            and cfg_mod.mode_enabled(cfg, "drive")
+            and tool in consult_tools
+            and not cfg_mod.was_consulted()):
+        cfg_mod.emit(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "deny",
+                    "permissionDecisionReason": (
+                        "jeveloper (Jev-first): consult Jev before this action so the decision "
+                        "is offloaded from Claude's own reasoning. Enumerate 2-5 candidate "
+                        "actions and run: python3 "
+                        f"\"{os.path.join(os.path.dirname(os.path.abspath(__file__)), 'jev_next.py')}\" "
+                        "\"<one-line state>\" \"<objective>\" id1:label id2:label ... — follow "
+                        "`chosen`, then retry this tool. (Enforced once per turn.)"
+                    ),
+                }
+            }
+        )
+        sys.exit(0)
+
     tool_input = data.get("tool_input", {})
     goal = cfg.get("goal", "")
 

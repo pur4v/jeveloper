@@ -70,6 +70,7 @@ def main() -> None:
     cfg = cfg_mod.load_config()
     if not cfg_mod.mode_enabled(cfg, "drive"):
         sys.exit(0)  # disabled or keyless -> inject nothing
+    cfg_mod.reset_consulted()  # new turn: Jev not yet consulted (the gate re-arms)
     data = cfg_mod.read_hook_input()
     prompt = str(data.get("prompt", "") or "")
     context = INSTRUCTION

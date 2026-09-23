@@ -27,10 +27,12 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import jev_client as jc  # noqa: E402
+import jev_config as cfg_mod  # noqa: E402
 
 
 def choose(state: str, objective: str, options: list[dict]) -> dict:
     """options: list of {"id","label"}. Returns the decision dict."""
+    cfg_mod.mark_consulted()  # Jev is being consulted this turn -> re-arms the Jev-first gate
     opt_map = {o["id"]: o.get("label", o["id"]) for o in options}
     result = jc.ask(
         {"state": state, "objective": objective},
