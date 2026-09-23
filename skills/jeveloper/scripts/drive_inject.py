@@ -75,6 +75,9 @@ def main() -> None:
     cfg = cfg_mod.load_config()
     if not cfg_mod.mode_enabled(cfg, "drive"):
         sys.exit(0)  # disabled or keyless -> inject nothing
+    # This hook HAS the plugin key (CLAUDE_PLUGIN_OPTION_*); cache it so the Bash-run CLIs
+    # (jev_path/jev_next/jev_ask) can read it too and run live instead of mock.
+    cfg_mod.cache_key_from_env()
     cfg_mod.reset_consulted()  # new turn: Jev not yet consulted (the gate re-arms)
     data = cfg_mod.read_hook_input()
     prompt = str(data.get("prompt", "") or "")

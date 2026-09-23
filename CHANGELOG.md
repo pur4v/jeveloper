@@ -30,6 +30,15 @@ All notable changes to jeveloper are documented here. The format is based on
   call around every action; disable any of `drive`/`route`/`check`/`warden` or narrow
   `route.tools` in `.jeveloper.json` to dial it back.
 
+### Fixed
+- **Key bridge: `jev_path`/`jev_next`/`jev_ask` are now live, not mock.** Claude Code injects the
+  plugin key only into **hook** processes (`CLAUDE_PLUGIN_OPTION_<NAME>`), never into the **Bash**
+  shell where Claude runs the Jev CLIs — so they always came back mock ("no API key") even with a
+  key configured, and Jev never actually scored. The UserPromptSubmit hook (which has the key)
+  now caches it to `~/.config/claude/.jeveloper-key` (0600, in the user config dir — never the
+  project, so it can't be committed), and `jev_client` reads that as a fallback. Works in every
+  terminal automatically, since the hook refreshes it each turn — no `export` needed.
+
 ### Added
 - **`jev_path` — Jev's output is the marching order.** At each state Claude throws 2–6 candidate
   situations/paths; Jev **scores every one in a single batched call**; `jev_path` ranks them,

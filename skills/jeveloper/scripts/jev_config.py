@@ -104,9 +104,11 @@ def _key_present(cfg: dict) -> bool:
     custom = (cfg.get("provider") or {}).get("api_key_env")
     if custom:
         names.insert(0, custom)
-    # A key may come from a plain env export OR from the plugin's userConfig prompt,
-    # which Claude Code injects as CLAUDE_PLUGIN_OPTION_<NAME>. Accept either form.
-    return any(os.environ.get(n) or os.environ.get("CLAUDE_PLUGIN_OPTION_" + n) for n in names)
+    # A key may come from a plain env export, the plugin's userConfig prompt (injected as
+    # CLAUDE_PLUGIN_OPTION_<NAME> into hooks), or the file a hook cached for the Bash CLIs.
+    if any(os.environ.get(n) or os.environ.get("CLAUDE_PLUGIN_OPTION_" + n) for n in names):
+        return True
+    return bool(read_cached_key()[1])
 
 
 def mode_enabled(cfg: dict, mode: str) -> bool:
@@ -147,6 +149,38 @@ def reset_consulted() -> None:
 
 def was_consulted() -> bool:
     return os.path.exists(consult_marker_path())
+
+
+_KEY_CACHE = os.path.expanduser("~/.config/claude/.jeveloper-key")
+
+
+def cache_key_from_env() -> None:
+    """Bridge the key from a HOOK process (which gets CLAUDE_PLUGIN_OPTION_<NAME>) to the Bash
+    CLIs (jev_path/jev_next/jev_ask), which run in a shell that does NOT get those injected —
+    so without this they'd always be mock. Called from the UserPromptSubmit hook, which has the
+    key. Writes `NAME=VALUE` to a 0600 file in the user's config dir (never the project, so it
+    can't be committed). Best-effort; never raises; never logs the value."""
+    for name in ("OPENROUTER_API_KEY", "TYPESAFE_API_KEY"):
+        val = os.environ.get(name) or os.environ.get("CLAUDE_PLUGIN_OPTION_" + name)
+        if val and len(val) >= 8:
+            try:
+                os.makedirs(os.path.dirname(_KEY_CACHE), exist_ok=True)
+                fd = os.open(_KEY_CACHE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+                with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                    fh.write(f"{name}={val.strip()}")
+            except OSError:
+                pass
+            return
+
+
+def read_cached_key() -> tuple[str, str]:
+    """(env_var_name, value) cached by cache_key_from_env(), or ("", "") if none."""
+    try:
+        with open(_KEY_CACHE, encoding="utf-8") as fh:
+            name, _, val = fh.read().strip().partition("=")
+            return name, val
+    except OSError:
+        return "", ""
 
 
 def read_hook_input() -> dict:

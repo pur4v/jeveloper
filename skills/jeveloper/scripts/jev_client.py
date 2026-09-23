@@ -55,7 +55,20 @@ def _env_key(name: str):
     plugin userConfig field entered at install time (CLAUDE_PLUGIN_OPTION_<NAME>)."""
     if not name:
         return None
-    return os.environ.get(name) or os.environ.get("CLAUDE_PLUGIN_OPTION_" + name)
+    v = os.environ.get(name) or os.environ.get("CLAUDE_PLUGIN_OPTION_" + name)
+    if v:
+        return v
+    # Fallback: a key cached by the UserPromptSubmit hook (which gets CLAUDE_PLUGIN_OPTION_*).
+    # This is what makes the Bash-run CLIs (jev_path/jev_next/jev_ask) live instead of mock,
+    # since the Bash shell never receives the injected plugin option.
+    try:
+        import jev_config
+        cached_name, cached_val = jev_config.read_cached_key()
+        if cached_name == name and cached_val:
+            return cached_val
+    except Exception:
+        pass
+    return None
 
 
 def _provider_cfg() -> dict:
