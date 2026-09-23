@@ -30,6 +30,16 @@ All notable changes to jeveloper are documented here. The format is based on
   call around every action; disable any of `drive`/`route`/`check`/`warden` or narrow
   `route.tools` in `.jeveloper.json` to dial it back.
 
+### Changed
+- **Warden is OFF by default now.** Claude Code renders *any* blocking Stop hook as a red
+  "Stop hook error", so even a correct "not done yet" hold looked like a failure and repeatedly
+  worsened the experience. The warden no longer runs unless you opt in (`"warden": {"enabled":
+  true}`) — its hardened logic (skips greetings, questions, images, tool-only/injected turns;
+  completeness-only gate) is kept for those who want it. Route, check, and drive are unchanged.
+- **Jev-derived lines are tagged `⟦Jev⟧` in Claude's prose.** A plugin can't recolour Claude's
+  own text (only jeveloper's own CLI output is coloured), so the driver now has Claude prefix any
+  Jev score/pick/adjudication it reports with `⟦Jev⟧`, making Jev's contribution identifiable.
+
 ### Fixed
 - **Key bridge: `jev_path`/`jev_next`/`jev_ask` are now live, not mock.** Claude Code injects the
   plugin key only into **hook** processes (`CLAUDE_PLUGIN_OPTION_<NAME>`), never into the **Bash**

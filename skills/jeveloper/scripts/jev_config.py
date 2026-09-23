@@ -59,7 +59,10 @@ DEFAULTS: dict = {
         "fail_threshold": 0.80,
     },
     "warden": {
-        "enabled": True,
+        # OFF by default: Claude Code renders ANY blocking Stop hook as a red "Stop hook error",
+        # so even a correct hold looks like a failure and hurts UX. Opt in with "enabled": true
+        # if you want Jev to keep the loop open until the work is done.
+        "enabled": False,
         # Score 0..10 of how complete the task is. At/above this the stop is allowed; below it
         # the loop keeps going. Completeness is the sole gate — the old `met` veto was dropped
         # (too noisy for text/advice turns); see warden.py.

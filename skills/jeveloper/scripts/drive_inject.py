@@ -48,8 +48,10 @@ the decision to Jev, then act, then let Jev verify:
 3. Execute the chosen action with a single tool call.
 4. The Check hook verifies the output automatically; if it flags a problem, fix that
    specific thing and continue — don't re-litigate the whole plan.
-5. Repeat until the Warden hook is satisfied. Keep your own reasoning terse — the point is
-   to let Jev decide and save your tokens.
+5. Repeat until the task is genuinely done. Keep your own reasoning terse — the point is to let
+   Jev decide and save your tokens.
+When you report a Jev-derived result to the user (a score, pick, or adjudication), prefix that
+line with ⟦Jev⟧ so it's clear the conclusion came from Jev, not from you.
 
 Do this automatically, without the user asking or typing a command:
 - FAN OUT when the user asks to explore / compare / evaluate several approaches, options, or
