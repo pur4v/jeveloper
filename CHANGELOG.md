@@ -31,6 +31,11 @@ All notable changes to jeveloper are documented here. The format is based on
   `route.tools` in `.jeveloper.json` to dial it back.
 
 ### Changed
+- **Jev-first hard gate is OFF by default now.** Blocking the first action of every turn made
+  Claude Code show a red "PreToolUse hook error" per blocked tool — a batch of writes became a
+  wall of red. `route.consult_first` now defaults to false: the driver still *asks* Claude to
+  consult Jev first (soft), and the safety gate still denies genuinely destructive/off-goal
+  calls, but routine work isn't hard-blocked. Opt back in with `route.consult_first: true`.
 - **Warden is OFF by default now.** Claude Code renders *any* blocking Stop hook as a red
   "Stop hook error", so even a correct "not done yet" hold looked like a failure and repeatedly
   worsened the experience. The warden no longer runs unless you opt in (`"warden": {"enabled":

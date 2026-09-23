@@ -45,11 +45,12 @@ DEFAULTS: dict = {
         # P(unsafe) at/above this -> deny; at/above ask_threshold -> ask; else allow.
         "deny_threshold": 0.85,
         "ask_threshold": 0.60,
-        # Jev-first: block the first substantive action of a turn until Jev has been consulted
-        # (jev_next / jev_ask has run this turn), so the decision is offloaded to Jev before
-        # Claude commits expensive reasoning to an action. Only enforced while `drive` is on
-        # (drive resets the per-turn marker). Set false to disable the enforcement.
-        "consult_first": True,
+        # Jev-first: block the first substantive action of a turn until Jev has been consulted.
+        # OFF by default: Claude Code renders each blocked tool as a red "PreToolUse hook error",
+        # so a batch of writes becomes a wall of red — worse UX than the enforcement is worth.
+        # The driver still asks Claude to consult Jev first (soft), and the safety gate below
+        # still denies genuinely destructive/off-goal calls. Opt in with true to hard-enforce.
+        "consult_first": False,
         "consult_tools": ["Edit", "Write", "MultiEdit", "NotebookEdit", "Bash", "Task"],
     },
     "check": {
