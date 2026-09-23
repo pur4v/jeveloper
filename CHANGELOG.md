@@ -37,9 +37,9 @@ All notable changes to jeveloper are documented here. The format is based on
   renders as `(tool_result)`; and the warden's own feedback, which lands in the transcript as
   a user turn, so each pass re-ingested the previous block as the new objective — a runaway
   that only released at `max_continues`. The warden now fails open when the objective is
-  trivial (greeting, two-word remark), a synthetic placeholder (tool-only turn or the no-goal
-  fallback), or its own feedback text, and no longer treats a placeholder-only turn as the
-  user's request. It guards real work only, and only when no explicit `goal` is configured.
+  trivial (greeting, two-word remark), a synthetic placeholder (tool-only turn, image-only
+  turn, or the no-goal fallback), or its own feedback text, and no longer treats a
+  placeholder-only turn as the user's request. It guards real work only, and only when no explicit `goal` is configured.
 - **Warden ignores system-injected turns.** Task notifications (subagent results), system
   reminders, and its own Stop-hook feedback all land in the transcript as `user` turns, so the
   warden could latch onto one — e.g. a returned capability table — as the objective and block

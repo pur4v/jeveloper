@@ -35,6 +35,8 @@ _GREETINGS = {
 
 # Artifacts _flatten() emits for tool-only turns — never a real objective on their own.
 _PLACEHOLDER_RE = re.compile(r"\(tool_result\)|\(tool_use:[^)]*\)")
+# Image references a turn may carry with no gradeable text of its own.
+_IMAGE_RE = re.compile(r"\[image[^\]]*\]", re.I)
 _NO_GOAL = "(no explicit goal found in transcript)"
 
 # Substrings that mark a "user" turn as system-injected (task notifications, system
@@ -57,8 +59,9 @@ def _is_trivial_objective(text: str) -> bool:
     t = text.strip().lower().rstrip("!.?")
     if not t or t == _NO_GOAL:
         return True
-    # A turn that was only tool_result / tool_use blocks carries no objective.
-    if not _PLACEHOLDER_RE.sub("", t).strip():
+    # A turn that was only tool_result / tool_use blocks and/or image refs (no gradeable
+    # text) carries no objective.
+    if not _IMAGE_RE.sub("", _PLACEHOLDER_RE.sub("", t)).strip():
         return True
     # System-injected content (task notifications, system reminders) is never an objective.
     if _is_injected(t):
