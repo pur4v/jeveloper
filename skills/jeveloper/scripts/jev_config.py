@@ -154,22 +154,31 @@ def was_consulted() -> bool:
 _KEY_CACHE = os.path.expanduser("~/.config/claude/.jeveloper-key")
 
 
+def set_key(name: str, value: str) -> bool:
+    """Cache `name=value` to the 0600 key file so the Bash CLIs can read it. Used both by the
+    hook bridge and by jev_setkey.py (the human-in-the-loop fallback). Never raises; never logs
+    the value. Returns True on success."""
+    if not name or not value or len(value.strip()) < 8:
+        return False
+    try:
+        os.makedirs(os.path.dirname(_KEY_CACHE), exist_ok=True)
+        fd = os.open(_KEY_CACHE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(f"{name}={value.strip()}")
+        return True
+    except OSError:
+        return False
+
+
 def cache_key_from_env() -> None:
     """Bridge the key from a HOOK process (which gets CLAUDE_PLUGIN_OPTION_<NAME>) to the Bash
     CLIs (jev_path/jev_next/jev_ask), which run in a shell that does NOT get those injected —
     so without this they'd always be mock. Called from the UserPromptSubmit hook, which has the
-    key. Writes `NAME=VALUE` to a 0600 file in the user's config dir (never the project, so it
-    can't be committed). Best-effort; never raises; never logs the value."""
+    key."""
     for name in ("OPENROUTER_API_KEY", "TYPESAFE_API_KEY"):
         val = os.environ.get(name) or os.environ.get("CLAUDE_PLUGIN_OPTION_" + name)
-        if val and len(val) >= 8:
-            try:
-                os.makedirs(os.path.dirname(_KEY_CACHE), exist_ok=True)
-                fd = os.open(_KEY_CACHE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-                with os.fdopen(fd, "w", encoding="utf-8") as fh:
-                    fh.write(f"{name}={val.strip()}")
-            except OSError:
-                pass
+        if val:
+            set_key(name, val)
             return
 
 

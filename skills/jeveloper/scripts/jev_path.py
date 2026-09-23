@@ -24,6 +24,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import jev_client as jc  # noqa: E402
+import jev_color as clr  # noqa: E402
 import jev_config as cfg_mod  # noqa: E402
 
 _LEVELS = ["very poor", "poor", "fair", "good", "excellent"]
@@ -90,9 +91,17 @@ def main(argv: list[str]) -> int:
     state, objective, rest = argv[0], argv[1], argv[2:]
     paths = _parse_paths(rest)
     if not paths:
-        sys.stderr.write("jev_path needs at least one candidate path\n")
+        sys.stderr.write(clr.err("jev_path needs at least one candidate path") + "\n")
         return 2
-    print(json.dumps(score_paths(state, objective, paths), indent=2))
+    res = score_paths(state, objective, paths)
+    print(json.dumps(res, indent=2))  # stdout stays clean JSON (parseable)
+    # colored one-liner on stderr so the user can spot Jev's verdict at a glance
+    if res["mock"]:
+        sys.stderr.write(clr.warn(f"scored {len(paths)} paths [MOCK — no key] → would pick "
+                                  f"{res['best']}; decide it yourself") + "\n")
+    else:
+        sys.stderr.write(clr.jev(f"scored {len(paths)} paths → best: {res['best']} "
+                                 f"({res['confidence']:.2f})") + "\n")
     return 0
 
 

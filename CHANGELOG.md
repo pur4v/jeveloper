@@ -40,6 +40,14 @@ All notable changes to jeveloper are documented here. The format is based on
   terminal automatically, since the hook refreshes it each turn — no `export` needed.
 
 ### Added
+- **Colour-coded Jev output (`jev_color.py`).** Jev's lines are now cyan and tagged `⟦Jev⟧`,
+  mock/advisory is yellow, and errors are red — so a user can tell Jev's output from Claude's
+  prose (default colour) and from errors at a glance. The CLIs print a coloured `⟦Jev⟧` banner
+  to **stderr** while keeping **stdout clean JSON** (still parseable); `jev_doctor` is fully
+  colourised. Honours `NO_COLOR` / `JEVELOPER_NO_COLOR`.
+- **Human-in-the-loop key fallback (`jev_setkey.py`).** If Jev still can't find a key (mock),
+  the driver asks the user to paste their OpenRouter/TypeSafe key and — only with explicit
+  permission — stores it via `jev_setkey.py`, making Jev live in this and every future terminal.
 - **`jev_path` — Jev's output is the marching order.** At each state Claude throws 2–6 candidate
   situations/paths; Jev **scores every one in a single batched call**; `jev_path` ranks them,
   picks the `best`, and emits a `directive` ("DO NEXT → …") that Claude executes without

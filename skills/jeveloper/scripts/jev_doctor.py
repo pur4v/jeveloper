@@ -15,6 +15,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import jev_client as jc  # noqa: E402
+import jev_color as clr  # noqa: E402
 import jev_config as cfg_mod  # noqa: E402
 
 
@@ -66,7 +67,19 @@ def main() -> None:
     lines.append("")
     verdict = "LIVE — jeveloper is working." if (enabled and live) else "NOT live — fix the red (✗) lines above."
     lines.append(f"  verdict: {verdict}")
-    print("\n".join(lines))
+    out = []
+    for ln in lines:
+        if "✗" in ln or ln.strip().startswith("fix:"):
+            out.append(clr.paint(ln, "err"))
+        elif "verdict:" in ln:
+            out.append(clr.paint(ln, "jev" if "LIVE" in ln else "err"))
+        elif "✓" in ln:
+            out.append(clr.paint(ln, "ok"))
+        elif ln == "jeveloper — doctor":
+            out.append(clr.paint(ln, "bold"))
+        else:
+            out.append(ln)
+    print("\n".join(out))
 
 
 if __name__ == "__main__":

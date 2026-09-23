@@ -20,8 +20,9 @@ import jev_config as cfg_mod  # noqa: E402
 # fan-out to the model's discretion — we inject a hard, prompt-specific directive that says to
 # fan out NOW. (A hook can't spawn subagents itself; this is the strongest automatic lever.)
 _FANOUT_RE = re.compile(
-    r"\b(compare|comparison|trade[- ]?offs?|versus|vs\.?|evaluate|weigh|pros and cons|"
-    r"which (?:one|is|should|approach|option)|best (?:way|approach|option)|"
+    r"\b(compare|comparison|trade[- ]?offs?|versus|pros and cons|"
+    r"which (?:approach|option|design|stack|framework|architecture)|"
+    r"best (?:approach|option|design|stack|architecture)|"
     r"(?:different|several|multiple|various|a few) (?:ways|approaches|options|designs|"
     r"alternatives|strategies)|\d+\s+(?:ways|approaches|options|designs|ideas|alternatives|"
     r"strategies))\b",
@@ -57,8 +58,10 @@ Do this automatically, without the user asking or typing a command:
   let Jev adjudicate the outcomes with jev_next and keep the winner. Prefer this over answering
   a multi-approach comparison directly — the independent parallel depth is the point. Cap at ~4
   (each branch is a real subagent = real tokens).
-- SELF-DIAGNOSE if Jev's own decisions keep coming back mock/inert: run
-  skills/jeveloper/scripts/jev_doctor.py and tell the user the single fix.
+- SELF-DIAGNOSE if Jev's decisions keep coming back mock/inert: run jev_doctor.py. If the key
+  is genuinely missing, ASK the user to paste their OpenRouter (or TypeSafe) API key, and only
+  with their explicit permission store it via jev_setkey.py "<key>" so Jev goes live (this and
+  every future terminal). Never store a key without asking.
 For pure questions/explanations (no actions to take), answer normally."""
 
 FANOUT_DIRECTIVE = """[jeveloper — FAN OUT REQUIRED for this prompt]

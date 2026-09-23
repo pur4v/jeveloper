@@ -28,6 +28,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import jev_client as jc  # noqa: E402
+import jev_color as clr  # noqa: E402
 import jev_config as cfg_mod  # noqa: E402
 
 
@@ -98,9 +99,15 @@ def main(argv: list[str]) -> int:
     state, objective, rest = argv[0], argv[1], argv[2:]
     options = _parse_options(rest)
     if not options:
-        sys.stderr.write("jev_next needs at least one candidate action\n")
+        sys.stderr.write(clr.err("jev_next needs at least one candidate action") + "\n")
         return 2
-    print(json.dumps(choose(state, objective, options), indent=2))
+    res = choose(state, objective, options)
+    print(json.dumps(res, indent=2))  # stdout stays clean JSON (parseable)
+    if res["mock"]:
+        sys.stderr.write(clr.warn(f"[MOCK — no key] would pick {res['chosen']}; "
+                                  f"decide it yourself") + "\n")
+    else:
+        sys.stderr.write(clr.jev(f"chose {res['chosen']} ({res['confidence']:.2f})") + "\n")
     return 0
 
 
