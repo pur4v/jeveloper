@@ -66,9 +66,12 @@ All notable changes to jeveloper are documented here. The format is based on
   fan-out actually runs each branch. Real subagents = real tokens, so it's for genuinely
   divergent directions worth the cost.
 - **Zero-command by default.** The always-on driver now triggers fan-out and self-diagnosis on
-  its own — no need to type `/jeveloper:fanout` or `/jeveloper:doctor`. It fans out to parallel
-  subagents when a task has genuinely divergent approaches, and runs the doctor when its own
-  decisions keep coming back mock/inert. The commands remain for explicit use.
+  its own — no need to type `/jeveloper:fanout` or `/jeveloper:doctor`. The `UserPromptSubmit`
+  hook detects compare/explore/"several approaches" prompts and injects a mandatory
+  **"FAN OUT REQUIRED"** directive for them (a hook can't spawn subagents itself, so this is the
+  strongest automatic lever), so the parallel-subagent behaviour fires without the user asking.
+  The doctor runs when Jev's own decisions keep coming back mock/inert. The commands remain for
+  explicit use.
 - **Health check (`/jeveloper:doctor`, `jev_doctor.py`).** One shot: master switch, key
   detection, a real live probe, each reflex's on/off + live/MOCK state, config-file validity,
   and hook registration — with the exact fix for every red line. Targets jeveloper's biggest
