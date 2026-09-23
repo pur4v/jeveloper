@@ -29,7 +29,7 @@ def _is_consult_command(tool: str, tool_input: dict) -> bool:
     if tool != "Bash":
         return False
     cmd = (tool_input or {}).get("command", "") or ""
-    return "jev_next" in cmd or "jev_ask" in cmd
+    return "jev_next" in cmd or "jev_ask" in cmd or "jev_path" in cmd
 
 
 def main() -> None:
@@ -65,11 +65,11 @@ def main() -> None:
                     "permissionDecision": "deny",
                     "permissionDecisionReason": (
                         "jeveloper (Jev-first): consult Jev before this action so the decision "
-                        "is offloaded from Claude's own reasoning. Enumerate 2-5 candidate "
-                        "actions and run: python3 "
-                        f"\"{os.path.join(os.path.dirname(os.path.abspath(__file__)), 'jev_next.py')}\" "
-                        "\"<one-line state>\" \"<objective>\" id1:label id2:label ... — follow "
-                        "`chosen`, then retry this tool. (Enforced once per turn.)"
+                        "is offloaded from Claude's own reasoning. Throw 2-6 candidate paths "
+                        "and run: python3 "
+                        f"\"{os.path.join(os.path.dirname(os.path.abspath(__file__)), 'jev_path.py')}\" "
+                        "\"<one-line state>\" \"<objective>\" s1:path s2:path ... — then follow "
+                        "the `directive` it returns and retry this tool. (Once per turn.)"
                     ),
                 }
             }

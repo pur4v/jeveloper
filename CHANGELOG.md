@@ -30,6 +30,16 @@ All notable changes to jeveloper are documented here. The format is based on
   call around every action; disable any of `drive`/`route`/`check`/`warden` or narrow
   `route.tools` in `.jeveloper.json` to dial it back.
 
+### Added
+- **`jev_path` — Jev's output is the marching order.** At each state Claude throws 2–6 candidate
+  situations/paths; Jev **scores every one in a single batched call**; `jev_path` ranks them,
+  picks the `best`, and emits a `directive` ("DO NEXT → …") that Claude executes without
+  re-deliberating. Output is `{scores (0..1), ranking, best, directive, confidence, mock}`. The
+  always-on driver and the Jev-first gate now point here (throw paths → score → best →
+  directive → act), and `/jeveloper:path` invokes it explicitly. `jev_next` gains a matching
+  `directive` field for simple either/or picks. This is the "state → structured scored options →
+  best path drives the next action" loop.
+
 ### Fixed
 - **Warden no longer loops on non-task objectives.** The Stop hook took the latest user turn
   as the objective and blocked the stop whenever Jev judged it incomplete — misfiring three

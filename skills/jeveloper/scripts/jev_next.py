@@ -15,9 +15,10 @@ Usage:
   # or pipe a JSON list of {"id","label"} on stdin:
   echo '[{"id":"a","label":"..."}]' | jev_next.py "<state>" "<objective>" -
 
-Prints JSON: {chosen, confidence, probabilities, mock, options}. On mock (no key) `chosen`
-is the first option and `mock` is true — Claude should then decide for itself, not follow a
-placeholder.
+Prints JSON: {chosen, directive, confidence, probabilities, mock, options}. `directive` is an
+explicit "DO NEXT → ..." step for Claude to execute verbatim — the output guides the next
+action, it isn't just a label to re-interpret. On mock (no key) `chosen` is the first option
+and `mock` is true — Claude should then decide for itself, not follow a placeholder.
 """
 from __future__ import annotations
 
@@ -47,13 +48,36 @@ def choose(state: str, objective: str, options: list[dict]) -> dict:
     chosen = jc.choice_of(ans)
     if result.get("mock") or chosen is None:
         chosen = options[0]["id"] if options else None
+    conf = jc.confidence_of(ans)
+    label = opt_map.get(chosen, chosen) if chosen else "(none)"
+    # The directive is the point: Jev's output should tell Claude what to DO next, not just
+    # hand back a label to re-interpret. Claude follows this verbatim as its next single action.
+    runner_up = _runner_up(probs, chosen)
+    if result.get("mock"):
+        directive = (f"[mock — no Jev key] Jev could not decide; provisional pick '{chosen}': "
+                     f"{label}. Decide it yourself, then act.")
+    else:
+        also = f" (next-best: {runner_up})" if runner_up else ""
+        directive = (f"DO NEXT → {chosen}: {label}. Execute this as your next single action, "
+                     f"then let the Check hook verify. Confidence {conf:.2f}{also}. Do not "
+                     f"re-deliberate the rejected options.")
     return {
         "chosen": chosen,
-        "confidence": jc.confidence_of(ans),
+        "directive": directive,
+        "confidence": conf,
         "probabilities": probs,
         "mock": result.get("mock", True),
         "options": opt_map,
     }
+
+
+def _runner_up(probs: dict, chosen) -> str:
+    """The second-highest option id by probability, if any — context for the directive."""
+    ranked = sorted(((float(v or 0), k) for k, v in (probs or {}).items()), reverse=True)
+    for _, k in ranked:
+        if k != chosen:
+            return k
+    return ""
 
 
 def _parse_options(args: list[str]) -> list[dict]:

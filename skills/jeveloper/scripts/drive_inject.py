@@ -30,15 +30,20 @@ _FANOUT_RE = re.compile(
 
 _SCRIPTS = os.path.dirname(os.path.abspath(__file__))
 _NEXT = os.path.join(_SCRIPTS, "jev_next.py")
+_PATH = os.path.join(_SCRIPTS, "jev_path.py")
 
 INSTRUCTION = f"""[jeveloper driver mode — active this session]
 Jev is the judge that drives. For any actionable task, do NOT deliberate at length — defer
 the decision to Jev, then act, then let Jev verify:
-1. Assess the state in one line; enumerate 2–5 concrete candidate next actions.
-2. Let Jev pick (this is the *first* thing you do before acting):
-     python3 "{_NEXT}" "<one-line state>" "<objective>" id1:"label" id2:"label" ...
-   Follow `chosen`. Override only if it's impossible/malformed (say so in one line). If
-   `mock` is true (no key resolved), decide yourself and note it.
+1. Assess the state in one line, then throw 2–6 concrete candidate situations/paths you could
+   take next — don't pre-judge them, that's Jev's job.
+2. Let Jev score them and hand back the best path (this is the *first* thing you do before
+   acting):
+     python3 "{_PATH}" "<one-line state>" "<objective>" s1:"path 1" s2:"path 2" ...
+   Jev returns per-path `scores`, the `best`, and a `directive` ("DO NEXT → ..."). Execute the
+   directive as your next single action; do NOT re-deliberate the lower-scored paths. (For a
+   simple either/or pick, {_NEXT} works too.) If `mock` is true (no key), decide yourself and
+   note it.
 3. Execute the chosen action with a single tool call.
 4. The Check hook verifies the output automatically; if it flags a problem, fix that
    specific thing and continue — don't re-litigate the whole plan.
