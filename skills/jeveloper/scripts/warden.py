@@ -228,7 +228,13 @@ def main() -> None:
         cfg_mod.fail_open(f"question objective — answered, not graded (score={score:.1f})")
         return
 
-    if score >= done_threshold and met >= 0.5:
+    # Very high completeness means Jev is confident the work is genuinely done ("done AND
+    # verified" is the top rung, so unfinished code can't reach it). The `met` "everything
+    # verified in recent activity" check reads systematically low for text/advice deliverables
+    # (nothing to verify in the transcript), so don't let it veto a near-certain result. Keep
+    # requiring `met` only in the middle band, where completeness alone is less trustworthy.
+    sure_threshold = float(warden_cfg.get("sure_threshold", 9.0))
+    if score >= sure_threshold or (score >= done_threshold and met >= 0.5):
         _reset_counter(counter_path)
         cfg_mod.fail_open(f"done (score={score:.1f}, met={met:.2f})")
         return
